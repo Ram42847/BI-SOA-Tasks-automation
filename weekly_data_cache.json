@@ -1,0 +1,723 @@
+{
+  "2026-05-31_2026-06-06": {
+    "merp_B": 32,
+    "merp_C": 15,
+    "merp_open": 124,
+    "merp_wip": 103,
+    "merp_backlog": 21,
+    "bugs_B": 13,
+    "bugs_C": 18,
+    "bugs_open": 16,
+    "biz_opened": 17,
+    "int_opened": 15,
+    "dev_tasks": {}
+  },
+  "2026-06-07_2026-06-13": {
+    "merp_B": 20,
+    "merp_C": 21,
+    "merp_open": 123,
+    "merp_wip": 101,
+    "merp_backlog": 22,
+    "bugs_B": 9,
+    "bugs_C": 13,
+    "bugs_open": 12,
+    "biz_opened": 10,
+    "int_opened": 10,
+    "dev_tasks": {}
+  },
+  "2026-06-14_2026-06-20": {
+    "merp_B": 22,
+    "merp_C": 38,
+    "merp_open": 107,
+    "merp_wip": 92,
+    "merp_backlog": 15,
+    "bugs_B": 7,
+    "bugs_C": 5,
+    "bugs_open": 14,
+    "biz_opened": 13,
+    "int_opened": 9,
+    "dev_tasks": {}
+  },
+  "2026-06-21_2026-06-27": {
+    "merp_B": 16,
+    "merp_open": 112,
+    "merp_wip": 91,
+    "merp_backlog": 21,
+    "bugs_B": 7,
+    "bugs_open": 15,
+    "biz_opened": 9,
+    "int_opened": 7,
+    "dev_tasks": {
+      "Aman Kumar": [
+        {
+          "id": 658150,
+          "subject": "PHP to GO migration for - /index.php/proposal/listing/PaymentServices",
+          "type": "API Optimization"
+        },
+        {
+          "id": 660145,
+          "subject": "PHP to Golang migration : /index.php/userlist/CreateOpportunity",
+          "type": "API Optimization"
+        },
+        {
+          "id": 669164,
+          "subject": "Display Call Answer Metrics on Seller Contact Numbers on CSD MERP",
+          "type": "API Story"
+        },
+        {
+          "id": 669855,
+          "subject": "Discount API mismatch Between WEBERP and MERP proposal screen",
+          "type": "API Bug"
+        },
+        {
+          "id": 669860,
+          "subject": "PHP to Golang Migration : /index.php/proposal/Listing/AddProposalv1",
+          "type": "API Optimization"
+        },
+        {
+          "id": 670371,
+          "subject": "API Enhancement for MAP Price Exposure and Dynamic Rank Support in sellerMcatCityReport API",
+          "type": "API Story"
+        },
+        {
+          "id": 671861,
+          "subject": "DWH APIs to Merp domain",
+          "type": "Task"
+        },
+        {
+          "id": 672539,
+          "subject": "API Requirement to Fetch Pricing from glcat_mcat_loc_price",
+          "type": "API Story"
+        }
+      ],
+      "Aniket Mishra": [
+        {
+          "id": 672454,
+          "subject": "Address is inconsistent in fetchglusraddress API",
+          "type": "API Bug"
+        },
+        {
+          "id": 673787,
+          "subject": "Seller location display - top locations and glusr location on all -MERPs",
+          "type": "API Story"
+        },
+        {
+          "id": 674066,
+          "subject": "Appointment letter pdfs not generated from pdf_generation  queue",
+          "type": "API Bug"
+        }
+      ],
+      "Arjun Sharma": [
+        {
+          "id": 631204,
+          "subject": "Proposal approval handling for cases where renewal is not generated",
+          "type": "API Story"
+        },
+        {
+          "id": 658483,
+          "subject": "PHP to GO Migration : /index.php/pay/ReceiptGeneration/ReceiptTagging",
+          "type": "API Optimization"
+        },
+        {
+          "id": 663504,
+          "subject": "PHP to GO Migration : /index.php/erp/OpportunityRemainderMailer/sendOpportunityEmails",
+          "type": "API Optimization"
+        },
+        {
+          "id": 667013,
+          "subject": "PHP to GO Migration : /index.php/OVPValidation/validateOVPOnProposalCreation",
+          "type": "API Optimization"
+        },
+        {
+          "id": 668683,
+          "subject": "Indian BL DAU key in 12months/weeks Scorecard API",
+          "type": "API Story"
+        },
+        {
+          "id": 669493,
+          "subject": "[Imp]: Internal Email Communication Optimization \u2013 Cost Reduction (CSD/KCD/Tele Annual verticals)",
+          "type": "API Story"
+        },
+        {
+          "id": 670781,
+          "subject": "PHP to GO Migration : /index.php/salelist/automaturity",
+          "type": "API Optimization"
+        },
+        {
+          "id": 671627,
+          "subject": "Enabling 0\u2013120 Upsell Filter & Case-Level Visibility in MERP",
+          "type": "API Story"
+        },
+        {
+          "id": 672485,
+          "subject": "Unable to Approve Proposal for IL10 + Preferred Leader Pro Despite Active Base Service Requirement Validation",
+          "type": "API Bug"
+        },
+        {
+          "id": 673744,
+          "subject": "Require Support for API's for IM AD pro service",
+          "type": "Task"
+        },
+        {
+          "id": 674315,
+          "subject": "Usage of imdocs",
+          "type": "Task"
+        },
+        {
+          "id": 674316,
+          "subject": "Webhook id separation in eks repos",
+          "type": "Task"
+        }
+      ],
+      "Garg Priya": [
+        {
+          "id": 631204,
+          "subject": "Proposal approval handling for cases where renewal is not generated",
+          "type": "API Story"
+        },
+        {
+          "id": 642036,
+          "subject": "CQS details API timeout errors",
+          "type": "API Bug"
+        },
+        {
+          "id": 658150,
+          "subject": "PHP to GO migration for - /index.php/proposal/listing/PaymentServices",
+          "type": "API Optimization"
+        },
+        {
+          "id": 658483,
+          "subject": "PHP to GO Migration : /index.php/pay/ReceiptGeneration/ReceiptTagging",
+          "type": "API Optimization"
+        },
+        {
+          "id": 660145,
+          "subject": "PHP to Golang migration : /index.php/userlist/CreateOpportunity",
+          "type": "API Optimization"
+        },
+        {
+          "id": 661513,
+          "subject": "PHP to GO Migration : /index.php/proposal/listing/Previewproposal",
+          "type": "API Optimization"
+        },
+        {
+          "id": 663504,
+          "subject": "PHP to GO Migration : /index.php/erp/OpportunityRemainderMailer/sendOpportunityEmails",
+          "type": "API Optimization"
+        },
+        {
+          "id": 667013,
+          "subject": "PHP to GO Migration : /index.php/OVPValidation/validateOVPOnProposalCreation",
+          "type": "API Optimization"
+        },
+        {
+          "id": 668683,
+          "subject": "Indian BL DAU key in 12months/weeks Scorecard API",
+          "type": "API Story"
+        },
+        {
+          "id": 668911,
+          "subject": "Stopping internal emails to reduce email volume (CSD/KCD/Tele Annual verticals)",
+          "type": "API Story"
+        },
+        {
+          "id": 669164,
+          "subject": "Display Call Answer Metrics on Seller Contact Numbers on CSD MERP",
+          "type": "API Story"
+        },
+        {
+          "id": 669855,
+          "subject": "Discount API mismatch Between WEBERP and MERP proposal screen",
+          "type": "API Bug"
+        },
+        {
+          "id": 669860,
+          "subject": "PHP to Golang Migration : /index.php/proposal/Listing/AddProposalv1",
+          "type": "API Optimization"
+        },
+        {
+          "id": 669996,
+          "subject": "Issue on Preview Proposal Screen for Industry Leader Value+ and Featured Leader Value+ Services.",
+          "type": "API Bug"
+        },
+        {
+          "id": 670324,
+          "subject": "PHP to GO Migration : /index.php/pay/enach/Addnach",
+          "type": "API Optimization"
+        },
+        {
+          "id": 670371,
+          "subject": "API Enhancement for MAP Price Exposure and Dynamic Rank Support in sellerMcatCityReport API",
+          "type": "API Story"
+        },
+        {
+          "id": 670781,
+          "subject": "PHP to GO Migration : /index.php/salelist/automaturity",
+          "type": "API Optimization"
+        },
+        {
+          "id": 671415,
+          "subject": "Making Deposit Bank Name dynamic - proforma/PostReceiptProposalNew",
+          "type": "API Story"
+        },
+        {
+          "id": 671627,
+          "subject": "Enabling 0\u2013120 Upsell Filter & Case-Level Visibility in MERP",
+          "type": "API Story"
+        },
+        {
+          "id": 671658,
+          "subject": "Inclusion of Catalog views in BL Consumed data on MERP",
+          "type": "API Story"
+        },
+        {
+          "id": 671861,
+          "subject": "DWH APIs to Merp domain",
+          "type": "Task"
+        },
+        {
+          "id": 672209,
+          "subject": "DWH APIs to Merp domain",
+          "type": "Task"
+        },
+        {
+          "id": 672485,
+          "subject": "Unable to Approve Proposal for IL10 + Preferred Leader Pro Despite Active Base Service Requirement Validation",
+          "type": "API Bug"
+        },
+        {
+          "id": 672539,
+          "subject": "API Requirement to Fetch Pricing from glcat_mcat_loc_price",
+          "type": "API Story"
+        },
+        {
+          "id": 673744,
+          "subject": "Require Support for API's for IM AD pro service",
+          "type": "Task"
+        },
+        {
+          "id": 673794,
+          "subject": "Latlong capture from CSD MERP during 'Company Search' and 'Global Search'",
+          "type": "API Story"
+        },
+        {
+          "id": 673842,
+          "subject": "Incorrect Service Sale Issue for Nach Update Case",
+          "type": "API Bug"
+        },
+        {
+          "id": 674315,
+          "subject": "Usage of imdocs",
+          "type": "Task"
+        },
+        {
+          "id": 674316,
+          "subject": "Webhook id separation in eks repos",
+          "type": "Task"
+        }
+      ],
+      "Hrishabh Awadhiya": [
+        {
+          "id": 668017,
+          "subject": "Request for IP Whitelisting \u2013 Company Search API (MERP Intermesh)",
+          "type": "API Story"
+        },
+        {
+          "id": 668511,
+          "subject": "API OPTIMIZATION [php to go]",
+          "type": "API Optimization"
+        },
+        {
+          "id": 671104,
+          "subject": "[PHP To Go] - /index.php/Queuehistory/SendMailFromQueue - Observations",
+          "type": "API Bug"
+        },
+        {
+          "id": 671595,
+          "subject": "Enable Full Ticket History Retrieval for LAST_TICKETS_CLM_FEEDBACK in KYC Details API",
+          "type": "API Story"
+        },
+        {
+          "id": 672514,
+          "subject": "Stop Auto TBRO against Domain eKYC External Ticket closure",
+          "type": "API Story"
+        },
+        {
+          "id": 673727,
+          "subject": "Live : Spacing Issue in Golang API Response and High Volume of 404 Errors Observed in New History API",
+          "type": "API Bug"
+        },
+        {
+          "id": 674101,
+          "subject": "[Bi-Support] Call Tagging Issue",
+          "type": "API Bug"
+        }
+      ],
+      "Kushagra Sharma": [
+        {
+          "id": 668017,
+          "subject": "Request for IP Whitelisting \u2013 Company Search API (MERP Intermesh)",
+          "type": "API Story"
+        },
+        {
+          "id": 673660,
+          "subject": "PHP to GO: NsdMaturityUpdateNew API Observations",
+          "type": "API Bug"
+        }
+      ],
+      "Mohit Saini3": [
+        {
+          "id": 642036,
+          "subject": "CQS details API timeout errors",
+          "type": "API Bug"
+        },
+        {
+          "id": 661513,
+          "subject": "PHP to GO Migration : /index.php/proposal/listing/Previewproposal",
+          "type": "API Optimization"
+        },
+        {
+          "id": 668911,
+          "subject": "Stopping internal emails to reduce email volume (CSD/KCD/Tele Annual verticals)",
+          "type": "API Story"
+        },
+        {
+          "id": 669996,
+          "subject": "Issue on Preview Proposal Screen for Industry Leader Value+ and Featured Leader Value+ Services.",
+          "type": "API Bug"
+        },
+        {
+          "id": 670324,
+          "subject": "PHP to GO Migration : /index.php/pay/enach/Addnach",
+          "type": "API Optimization"
+        },
+        {
+          "id": 671415,
+          "subject": "Making Deposit Bank Name dynamic - proforma/PostReceiptProposalNew",
+          "type": "API Story"
+        },
+        {
+          "id": 672209,
+          "subject": "DWH APIs to Merp domain",
+          "type": "Task"
+        },
+        {
+          "id": 673842,
+          "subject": "Incorrect Service Sale Issue for Nach Update Case",
+          "type": "API Bug"
+        }
+      ],
+      "Prashant Kumar Saxena": [
+        {
+          "id": 668511,
+          "subject": "API OPTIMIZATION [php to go]",
+          "type": "API Optimization"
+        },
+        {
+          "id": 669350,
+          "subject": "API OPTIMIZATION [php to go]",
+          "type": "API Optimization"
+        },
+        {
+          "id": 670832,
+          "subject": "Identify Correct Logic for Approved Score (TP) on DSR and TP Bifurcation",
+          "type": "R & D"
+        },
+        {
+          "id": 671001,
+          "subject": "Proposal to Migrate 9696 PHP Wrappers to MERP API",
+          "type": "API Story"
+        },
+        {
+          "id": 671104,
+          "subject": "[PHP To Go] - /index.php/Queuehistory/SendMailFromQueue - Observations",
+          "type": "API Bug"
+        },
+        {
+          "id": 671595,
+          "subject": "Enable Full Ticket History Retrieval for LAST_TICKETS_CLM_FEEDBACK in KYC Details API",
+          "type": "API Story"
+        },
+        {
+          "id": 672514,
+          "subject": "Stop Auto TBRO against Domain eKYC External Ticket closure",
+          "type": "API Story"
+        }
+      ],
+      "Pushkal Pandey": [
+        {
+          "id": 606341,
+          "subject": "Challan Status PHP to Go",
+          "type": "API Optimization"
+        },
+        {
+          "id": 673969,
+          "subject": "Re-Hosting Buttont Not visible",
+          "type": "API Bug"
+        }
+      ],
+      "Rachita Mathur": [
+        {
+          "id": 606341,
+          "subject": "Challan Status PHP to Go",
+          "type": "API Optimization"
+        },
+        {
+          "id": 667621,
+          "subject": "Keys for hotlead removal after 14 day in companylisting API",
+          "type": "API Story"
+        },
+        {
+          "id": 669318,
+          "subject": "Requirement: To modify Voicebot Lead Disposal API",
+          "type": "API Story"
+        },
+        {
+          "id": 670372,
+          "subject": "Movement of DWH API endpoint",
+          "type": "Task"
+        },
+        {
+          "id": 672273,
+          "subject": "Updation of Prices for the provided services",
+          "type": "API Story"
+        },
+        {
+          "id": 673049,
+          "subject": "Enable Instant Activation API for Winback",
+          "type": "API Story"
+        },
+        {
+          "id": 673236,
+          "subject": "Addition of TAN Verification Error Logs",
+          "type": "API Optimization"
+        },
+        {
+          "id": 673969,
+          "subject": "Re-Hosting Buttont Not visible",
+          "type": "API Bug"
+        },
+        {
+          "id": 673994,
+          "subject": "NI, NP, and Wrong Number Dispositions Missing in Call Update Screen for >5 Cr Turnover Companies (Vertical 65)",
+          "type": "API Bug"
+        }
+      ],
+      "Ramlal Suthar": [
+        {
+          "id": 659430,
+          "subject": "php to golang /index.php/proposal/listing/ProposalConfirmationnew",
+          "type": "Task"
+        },
+        {
+          "id": 665417,
+          "subject": "MOD ID changes for Seller Info on android app and ios app",
+          "type": "API Story"
+        },
+        {
+          "id": 667379,
+          "subject": "Ticket days logic Update for MERP",
+          "type": "API Story"
+        },
+        {
+          "id": 669603,
+          "subject": "PHP to GoLang /index.php/erp/AWSWrapper/Activitychart  API ",
+          "type": "Task"
+        },
+        {
+          "id": 671273,
+          "subject": "Display BLNI / Hidden BL marked by seller on CSD MERP",
+          "type": "API Story"
+        },
+        {
+          "id": 673712,
+          "subject": "Enhancement in E-NACH Account Change API",
+          "type": "Task"
+        },
+        {
+          "id": 673716,
+          "subject": "Show Last 7D|30D|90D BLNI in WebErp TopBar",
+          "type": "API Story"
+        }
+      ],
+      "Ramu Lath": [
+        {
+          "id": 670363,
+          "subject": "Airtel double-leg C2C \u2014 customC2cCall API vendor branching + new post-call endpoint",
+          "type": "API Story"
+        }
+      ],
+      "Shikha Pal": [
+        {
+          "id": 666502,
+          "subject": "PHP to GO Migration : /index.php/nach/nachdeactivate",
+          "type": "Task"
+        },
+        {
+          "id": 667051,
+          "subject": "Inconsistent behavior in PRESIGNED_URL key of preovp/preovpdata API",
+          "type": "API Bug"
+        },
+        {
+          "id": 668113,
+          "subject": "PHP to GO Migration : /index.php/pay/receiptGeneration/generatereceipt",
+          "type": "Task"
+        },
+        {
+          "id": 670903,
+          "subject": "PHP to GO Migration : /index.php/pay/PackageDetail/showpackagedetail",
+          "type": "Task"
+        },
+        {
+          "id": 671273,
+          "subject": "Display BLNI / Hidden BL marked by seller on CSD MERP",
+          "type": "API Story"
+        },
+        {
+          "id": 673712,
+          "subject": "Enhancement in E-NACH Account Change API",
+          "type": "Task"
+        },
+        {
+          "id": 673716,
+          "subject": "Show Last 7D|30D|90D BLNI in WebErp TopBar",
+          "type": "API Story"
+        }
+      ],
+      "Shivam 03": [
+        {
+          "id": 672679,
+          "subject": "PHP to GO Migration :/index.php/fcp/PhnSearchNative",
+          "type": "API Optimization"
+        },
+        {
+          "id": 673049,
+          "subject": "Enable Instant Activation API for Winback",
+          "type": "API Story"
+        },
+        {
+          "id": 673133,
+          "subject": "Enhance gstuserdetails API Response with GST and CIN Information",
+          "type": "Task"
+        }
+      ],
+      "Tyagi Prajjwal": [
+        {
+          "id": 665343,
+          "subject": "Tagged Invoice (Receipt) data is not showing, GLID: 43502687",
+          "type": "Task"
+        },
+        {
+          "id": 671515,
+          "subject": "Changes and Updates in \"TAcustomers\" API - Phase 2",
+          "type": "API Story"
+        },
+        {
+          "id": 672454,
+          "subject": "Address is inconsistent in fetchglusraddress API",
+          "type": "API Bug"
+        },
+        {
+          "id": 673300,
+          "subject": "Incorrect End Date in MDC PRO",
+          "type": "API Bug"
+        },
+        {
+          "id": 673787,
+          "subject": "Seller location display - top locations and glusr location on all -MERPs",
+          "type": "API Story"
+        },
+        {
+          "id": 674066,
+          "subject": "Appointment letter pdfs not generated from pdf_generation  queue",
+          "type": "API Bug"
+        }
+      ],
+      "Vedant Kothawade": [
+        {
+          "id": 667621,
+          "subject": "Keys for hotlead removal after 14 day in companylisting API",
+          "type": "API Story"
+        },
+        {
+          "id": 668308,
+          "subject": "Addition of 'Paid Tenure' Subfilter in Priority Data Filter ",
+          "type": "API Story"
+        },
+        {
+          "id": 670372,
+          "subject": "Movement of DWH API endpoint",
+          "type": "Task"
+        },
+        {
+          "id": 672273,
+          "subject": "Updation of Prices for the provided services",
+          "type": "API Story"
+        },
+        {
+          "id": 673994,
+          "subject": "NI, NP, and Wrong Number Dispositions Missing in Call Update Screen for >5 Cr Turnover Companies (Vertical 65)",
+          "type": "API Bug"
+        }
+      ],
+      "Venkatesh Vishwas": [
+        {
+          "id": 671515,
+          "subject": "Changes and Updates in \"TAcustomers\" API - Phase 2",
+          "type": "API Story"
+        }
+      ],
+      "Vipul Bansal": [
+        {
+          "id": 665417,
+          "subject": "MOD ID changes for Seller Info on android app and ios app",
+          "type": "API Story"
+        },
+        {
+          "id": 667051,
+          "subject": "Inconsistent behavior in PRESIGNED_URL key of preovp/preovpdata API",
+          "type": "API Bug"
+        },
+        {
+          "id": 667379,
+          "subject": "Ticket days logic Update for MERP",
+          "type": "API Story"
+        },
+        {
+          "id": 669493,
+          "subject": "[Imp]: Internal Email Communication Optimization \u2013 Cost Reduction (CSD/KCD/Tele Annual verticals)",
+          "type": "API Story"
+        },
+        {
+          "id": 669603,
+          "subject": "PHP to GoLang /index.php/erp/AWSWrapper/Activitychart  API ",
+          "type": "Task"
+        },
+        {
+          "id": 671658,
+          "subject": "Inclusion of Catalog views in BL Consumed data on MERP",
+          "type": "API Story"
+        },
+        {
+          "id": 673300,
+          "subject": "Incorrect End Date in MDC PRO",
+          "type": "API Bug"
+        },
+        {
+          "id": 673794,
+          "subject": "Latlong capture from CSD MERP during 'Company Search' and 'Global Search'",
+          "type": "API Story"
+        }
+      ],
+      "devansh khandelwal": [
+        {
+          "id": 670363,
+          "subject": "Airtel double-leg C2C \u2014 customC2cCall API vendor branching + new post-call endpoint",
+          "type": "API Story"
+        }
+      ]
+    },
+    "merp_C": 11,
+    "bugs_C": 6
+  }
+}
