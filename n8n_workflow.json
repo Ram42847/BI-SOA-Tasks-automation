@@ -1,0 +1,754 @@
+{
+  "name": "SOA Weekly Report",
+  "id": "dbe911d5-e14d-4797-bda5-2022d9c54cad",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "22351239-3521-4bec-bf3b-110e2f0f08cc",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        200
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "a7f36eaa-790f-4f9b-b69e-25f07d6cf615",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        380
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 20 * * 0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "4707e1ab-b0ff-40b4-b753-504c24ce99a5",
+      "name": "Code: Setup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        290
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Replace YOUR_OP_TOKEN_HERE with your actual OpenProject API token\nconst OP_TOKEN = 'YOUR_OP_TOKEN_HERE';\n\nconst PROJECT_ID          = 75;\nconst YEAR_LOOKBACK_DAYS  = 365;\nconst API_BUG_TYPE_ID     = 19;\nconst ENV_STAGE_OPTION_ID = '22';\nconst OPEN_STATUS_IDS = [\n  39,44,88,36,97,42,37,40,43,46,96,59,60,61,62,63,47,98,\n  93,94,95,64,89,90,91,92,82,48,49,52,50,51,53,65,54,66,\n  67,68,57,69,71,72,73,74,75,76,77,78,79,80,81,1,38,99,100,101\n];\n\n// Pure-JS Base64 — works even if Buffer is unavailable in this n8n version\nfunction _b64(str) {\n  if (typeof Buffer !== 'undefined') return Buffer.from(str).toString('base64');\n  const C = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';\n  const b = Array.from(str).map(c => c.charCodeAt(0));\n  let o = '', i = 0;\n  while (i < b.length) {\n    const b0=b[i++], b1=b[i], b2=b[i+1]; i+=2;\n    o += C[b0>>2]+C[((b0&3)<<4)|(b1>>4||0)]+\n         (b1===undefined?'=':C[((b1&15)<<2)|(b2>>6||0)])+\n         (b2===undefined?'=':C[b2&63]);\n  }\n  return o;\n}\nconst authHeader = 'Basic ' + _b64('apikey:' + OP_TOKEN);\n\nfunction toISO(d) { return d.toISOString().slice(0, 10); }\nfunction addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }\n\nconst today = new Date(); today.setHours(0,0,0,0);\nconst pyDay = (today.getDay() + 6) % 7;\nlet dsSat = ((pyDay - 5) % 7 + 7) % 7;\nif (dsSat === 0) dsSat = 7;\nconst sat = addDays(today, -dsSat);\nconst sun = addDays(sat, -6);\nconst ws  = toISO(sun), we = toISO(sat);\nconst cutoff = toISO(addDays(sat, -YEAR_LOOKBACK_DAYS));\n\nconst openIds = OPEN_STATUS_IDS.map(String);\nconst bugIds  = [String(API_BUG_TYPE_ID)];\nconst proj    = { project:      { operator: '=',   values: [String(PROJECT_ID)] } };\nconst open    = { status:       { operator: '=',   values: openIds } };\nconst notBug  = { type:         { operator: '!',   values: bugIds } };\nconst bug     = { type:         { operator: '=',   values: bugIds } };\nconst noStage = { customField9: { operator: '!',   values: [ENV_STAGE_OPTION_ID] } };\nconst created = { createdAt:    { operator: '<>d', values: [ws, we] } };\nconst yr      = { createdAt:    { operator: '<>d', values: [cutoff, we] } };\nconst updated = { updatedAt:    { operator: '<>d', values: [ws, we] } };\n\nconst fj = (...extras) => JSON.stringify([proj, ...extras]);\n\nreturn [{ json: {\n  authHeader,\n  weekStart:          ws,\n  weekEnd:            we,\n  merpOpenedFilter:   fj(created, open, notBug),\n  merpOpenEndFilter:  fj(yr, open, notBug),\n  bugsOpenedFilter:   fj(created, open, bug, noStage),\n  bugsOpenEndFilter:  fj(yr, open, bug, noStage),\n  devTasksFilter:     fj(open, yr, updated),\n  tasksDetailFilter:  fj(open, yr, notBug, updated),\n  bugsDetailFilter:   fj(open, yr, bug, noStage, updated),\n}}];\n"
+      }
+    },
+    {
+      "id": "f8dbbb12-dc56-4194-9631-b0c734b2bf64",
+      "name": "HTTP: Merp Opened",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        680,
+        290
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://project.intermesh.net/api/v3/work_packages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Code: Setup').first().json.authHeader }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filters",
+              "value": "={{ $('Code: Setup').first().json.merpOpenedFilter }}"
+            },
+            {
+              "name": "pageSize",
+              "value": "1000"
+            },
+            {
+              "name": "offset",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b554c374-0ec9-4513-80d0-ed86b7afafd5",
+      "name": "HTTP: Merp Open End",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        880,
+        290
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://project.intermesh.net/api/v3/work_packages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Code: Setup').first().json.authHeader }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filters",
+              "value": "={{ $('Code: Setup').first().json.merpOpenEndFilter }}"
+            },
+            {
+              "name": "pageSize",
+              "value": "1000"
+            },
+            {
+              "name": "offset",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a2e8cafb-ce88-4a65-9559-b72d7ea47b8e",
+      "name": "HTTP: Bugs Opened",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1080,
+        290
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://project.intermesh.net/api/v3/work_packages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Code: Setup').first().json.authHeader }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filters",
+              "value": "={{ $('Code: Setup').first().json.bugsOpenedFilter }}"
+            },
+            {
+              "name": "pageSize",
+              "value": "1000"
+            },
+            {
+              "name": "offset",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8b7c7793-3dca-4c4d-8668-7d5dca3fce3f",
+      "name": "HTTP: Bugs Open End",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1280,
+        290
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://project.intermesh.net/api/v3/work_packages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Code: Setup').first().json.authHeader }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filters",
+              "value": "={{ $('Code: Setup').first().json.bugsOpenEndFilter }}"
+            },
+            {
+              "name": "pageSize",
+              "value": "1000"
+            },
+            {
+              "name": "offset",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d370bdd9-e8fc-4c03-9ad8-fd23956297ee",
+      "name": "HTTP: Dev Tasks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1480,
+        290
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://project.intermesh.net/api/v3/work_packages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Code: Setup').first().json.authHeader }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filters",
+              "value": "={{ $('Code: Setup').first().json.devTasksFilter }}"
+            },
+            {
+              "name": "pageSize",
+              "value": "1000"
+            },
+            {
+              "name": "offset",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "331f00db-c0fe-497a-9352-69e2071b2ae1",
+      "name": "HTTP: Tasks Detail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1680,
+        290
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://project.intermesh.net/api/v3/work_packages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Code: Setup').first().json.authHeader }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filters",
+              "value": "={{ $('Code: Setup').first().json.tasksDetailFilter }}"
+            },
+            {
+              "name": "pageSize",
+              "value": "1000"
+            },
+            {
+              "name": "offset",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "3a58db57-914b-4cad-8239-d3693fd36ab0",
+      "name": "HTTP: Bugs Detail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1880,
+        290
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://project.intermesh.net/api/v3/work_packages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Code: Setup').first().json.authHeader }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filters",
+              "value": "={{ $('Code: Setup').first().json.bugsDetailFilter }}"
+            },
+            {
+              "name": "pageSize",
+              "value": "1000"
+            },
+            {
+              "name": "offset",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "dffaf4a2-624b-4175-b6bf-8fdf310abefd",
+      "name": "Code: Build Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2080,
+        290
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const BACKLOG_STATUS_IDS = new Set([1]);\nconst API_STORY_TYPE_ID  = 15;\nconst SHEET_URL = 'https://docs.google.com/spreadsheets/d/1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q';\n\nfunction linkId(links, key) {\n  const m = ((links?.[key]?.href) || '').match(/\\/(\\d+)$/);\n  return m ? parseInt(m[1]) : null;\n}\nfunction linkTitle(links, key, def='') { return (links?.[key]?.title) || def; }\n\n// getEls unwraps n8n v2.x HTTP response (body is in r.data as a JSON string)\nfunction getEls(nodeName) {\n  let r = $(nodeName).first().json;\n  if (r && r.data !== undefined) {\n    r = typeof r.data === 'string' ? JSON.parse(r.data) : r.data;\n  }\n  if (!r || !r._embedded) {\n    throw new Error(`${nodeName} — unexpected: ${JSON.stringify(r).slice(0,400)}`);\n  }\n  return r._embedded.elements || [];\n}\n\nconst merpOpenedEls  = getEls('HTTP: Merp Opened');\nconst merpOpenEndEls = getEls('HTTP: Merp Open End');\nconst bugsOpenedEls  = getEls('HTTP: Bugs Opened');\nconst bugsOpenEndEls = getEls('HTTP: Bugs Open End');\nconst devTasksEls    = getEls('HTTP: Dev Tasks');\nconst tasksDetailEls = getEls('HTTP: Tasks Detail');\nconst bugsDetailEls  = getEls('HTTP: Bugs Detail');\n\nconst merpB       = merpOpenedEls.length;\nconst merpOpenEnd = merpOpenEndEls.length;\nconst merpBacklog = merpOpenEndEls.filter(w => BACKLOG_STATUS_IDS.has(linkId(w._links,'status'))).length;\nconst merpWip     = merpOpenEnd - merpBacklog;\nconst bugsB       = bugsOpenedEls.length;\nconst bugsOpenEnd = bugsOpenEndEls.length;\nconst business    = merpOpenedEls.filter(w => linkId(w._links,'type') === API_STORY_TYPE_ID).length;\nconst internal    = merpB - business;\n\n// Dev tasks map (grouped by person, for the email table)\nconst devTasks = {}, seen = new Set();\nfor (const wp of devTasksEls) {\n  const links = wp._links || {};\n  const entry = { id: wp.id, subject: wp.subject||'', type: linkTitle(links,'type','Task') };\n  for (const person of [...new Set([linkTitle(links,'assignee',''), linkTitle(links,'responsible','')].filter(Boolean))]) {\n    const k = `${person}:${wp.id}`;\n    if (!seen.has(k)) {\n      (devTasks[person] = devTasks[person]||[]).push(entry);\n      seen.add(k);\n    }\n  }\n}\nfor (const p of Object.keys(devTasks)) devTasks[p].sort((a,b) => a.id - b.id);\n\n// Convert work package list to flat rows for Google Sheets\nfunction extractSheetRows(els, weekOf) {\n  return els.map(wp => {\n    const links = wp._links || {};\n    const fmt = s => s ? s.slice(0,16).replace('T',' ') : '';\n    return {\n      ID:          wp.id,\n      Subject:     wp.subject || '',\n      Type:        linkTitle(links, 'type', ''),\n      Status:      linkTitle(links, 'status', ''),\n      Author:      linkTitle(links, 'author', ''),\n      Assignee:    linkTitle(links, 'assignee', ''),\n      Accountable: linkTitle(links, 'responsible', ''),\n      'Updated on': fmt(wp.updatedAt),\n      'Created on': fmt(wp.createdAt),\n      'Week Of':   weekOf,\n    };\n  });\n}\n\n// Rolling 4-week cache (seeded with PDF ground-truth values)\nconst staticData = $getWorkflowStaticData('global');\nif (!staticData.cache) {\n  staticData.cache = {\n    \"2026-05-31_2026-06-06\": { merp_B:32,merp_C:15,merp_open:124,merp_wip:103,merp_backlog:21,bugs_B:13,bugs_C:18,bugs_open:16,biz_opened:17,int_opened:15,dev_tasks:{} },\n    \"2026-06-07_2026-06-13\": { merp_B:20,merp_C:21,merp_open:123,merp_wip:101,merp_backlog:22,bugs_B:9, bugs_C:13,bugs_open:12,biz_opened:10,int_opened:10,dev_tasks:{} },\n    \"2026-06-14_2026-06-20\": { merp_B:22,merp_C:38,merp_open:107,merp_wip:92, merp_backlog:15,bugs_B:7, bugs_C:5, bugs_open:14,biz_opened:13,int_opened:9, dev_tasks:{} }\n  };\n}\n\nconst setup = $('Code: Setup').first().json;\nconst ws = setup.weekStart, we = setup.weekEnd;\n\nfunction toISO(d) { return d.toISOString().slice(0,10); }\nfunction addDays(d,n) { const r=new Date(d); r.setDate(r.getDate()+n); return r; }\nfunction cacheKey(s,e) { return `${toISO(s)}_${toISO(e)}`; }\n\nconst currStart = new Date(ws+'T00:00:00'), currEnd = new Date(we+'T00:00:00');\nconst currKey   = cacheKey(currStart, currEnd);\n\nstaticData.cache[currKey] = {\n  merp_B:merpB, merp_open:merpOpenEnd, merp_wip:merpWip, merp_backlog:merpBacklog,\n  bugs_B:bugsB, bugs_open:bugsOpenEnd, biz_opened:business, int_opened:internal, dev_tasks:devTasks\n};\n\nconst weeks = [3,2,1,0].map(i=>[addDays(currStart,-7*i),addDays(currEnd,-7*i)]);\nconst rows  = weeks.map(([s,e])=>({ start:s, end:e, ...(staticData.cache[cacheKey(s,e)]||{}) }));\n\nconst MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];\nconst ML=['January','February','March','April','May','June','July','August','September','October','November','December'];\nfunction sl(s,e) { return `${s.getDate()} ${MS[s.getMonth()]} - ${e.getDate()} ${MS[e.getMonth()]}`; }\nfunction wl(s,e) { return `${s.getDate()} ${ML[s.getMonth()]} - ${e.getDate()} ${ML[e.getMonth()]} ${e.getFullYear()}`; }\n\nfor (let i=0;i<rows.length;i++) {\n  const r=rows[i];\n  r.merp_open_corrected=r.merp_open||0; r.bugs_open_corrected=r.bugs_open||0;\n  if (i===0) { r.merp_A=(r.merp_open||0)-(r.merp_B||0)+(r.merp_C||0); r.bugs_A=(r.bugs_open||0)-(r.bugs_B||0)+(r.bugs_C||0); }\n  else        { r.merp_A=rows[i-1].merp_open||0; r.bugs_A=rows[i-1].bugs_open||0; }\n  if (i===3) {\n    r.merp_C=r.merp_A+(r.merp_B||0)-(r.merp_open||0);\n    r.bugs_C=r.bugs_A+(r.bugs_B||0)-(r.bugs_open||0);\n    staticData.cache[currKey].merp_C=r.merp_C;\n    staticData.cache[currKey].bugs_C=r.bugs_C;\n  }\n}\n\n// HTML generation\nconst H='#2E6B73',S='#5F9EA0';\nconst AB='#FFEB9C',AF='#9C6500',GB='#C6EFCE',GF='#375623',PB='#FFC7CE',PF='#9C0006';\nconst TH=`background:${H};color:white;padding:6px 10px;font-weight:bold`;\n\nfunction pct(cv,pv,gu=true) {\n  if(!pv) return '<td style=\"text-align:center;padding:5px 8px\">—</td>';\n  const d=cv-pv,p=Math.abs(d)/pv*100,ar=d>=0?'▲':'▼';\n  let bg,fg;\n  if(p<=5){bg=AB;fg=AF;}else if((d>0)===gu){bg=GB;fg=GF;}else{bg=PB;fg=PF;}\n  return `<td style=\"background:${bg};color:${fg};font-weight:bold;white-space:nowrap;text-align:center;padding:5px 8px\">${ar} ${p.toFixed(1)}%</td>`;\n}\nfunction num(n){return `<td style=\"text-align:right;padding:5px 10px\">${n}</td>`;}\n\nconst cur=rows[3],prv=rows[2],lbs=rows.map(r=>sl(r.start,r.end));\nconst cD=(cur.merp_C||0)-(prv.merp_C||0),cP=prv.merp_C?Math.abs(cD)/prv.merp_C*100:0;\nconst bD=(cur.bugs_open_corrected||0)-(prv.bugs_open_corrected||0),bP=prv.bugs_open_corrected?Math.abs(bD)/prv.bugs_open_corrected*100:0;\nconst hc=(d,p,g)=>p<=5?'#f39c12':(d>0)===g?'#27ae60':'#e74c3c';\n\nconst hl=`<ul>\n<li>The total number of <strong>closed tasks</strong> has <strong>${cD>=0?'increased':'decreased'}</strong> by\n    <span style=\"color:${hc(cD,cP,true)};font-weight:bold\">${cD>=0?'▲':'▼'} ${cP.toFixed(1)}%</span> vs last week.</li>\n<li>The total count of <strong>open bugs</strong> has <strong>${bD>=0?'increased':'decreased'}</strong> by\n    <span style=\"color:${hc(bD,bP,false)};font-weight:bold\">${bD>=0?'▲':'▼'} ${bP.toFixed(1)}%</span> vs last week.</li>\n</ul>`;\n\nconst th=lbs.map(l=>`<th style=\"${TH};text-align:center\">${l}</th>`).join('');\nconst hdr=`<tr><th style=\"${TH};text-align:left\">Report Summary</th>${th}<th style=\"${TH};text-align:center\">(+/- Last Week)</th></tr>`;\nconst sec=l=>`<tr><td colspan=\"6\" style=\"background:${S};color:white;font-weight:bold;padding:5px 10px\">${l}</td></tr>`;\nconst dr=(label,vals,pv,cv,gu=true)=>`<tr><td style=\"padding:5px 10px\">${label}</td>${vals.map(num).join('')}${pct(cv,pv,gu)}</tr>`;\n\nconst mr=[\n  sec('Merp SOA Tasks'),\n  dr('Open: Beginning of this week (A)',rows.map(r=>r.merp_A||0),prv.merp_A||0,cur.merp_A||0,false),\n  dr('Opened During this week (B)',rows.map(r=>r.merp_B||0),prv.merp_B||0,cur.merp_B||0,false),\n  dr('Closed During this week (C)',rows.map(r=>r.merp_C||0),prv.merp_C||0,cur.merp_C||0,true),\n  dr('Open: End of this week (A + B - C)',rows.map(r=>r.merp_open_corrected||0),prv.merp_open_corrected||0,cur.merp_open_corrected||0,false),\n  '<tr><td colspan=\"6\" style=\"padding:3px\"></td></tr>',\n  dr('Items in Under Development (WIP)',rows.map(r=>r.merp_wip||0),prv.merp_wip||0,cur.merp_wip||0,true),\n  dr('Backlog (Yet to align)',rows.map(r=>r.merp_backlog||0),prv.merp_backlog||0,cur.merp_backlog||0,false),\n].join('');\n\nconst br=[\n  sec('SOA Bugs - Open Project Tickets'),\n  dr('Open : Beginning of this week (A)',rows.map(r=>r.bugs_A||0),prv.bugs_A||0,cur.bugs_A||0,false),\n  dr('Opened During this week (B)',rows.map(r=>r.bugs_B||0),prv.bugs_B||0,cur.bugs_B||0,false),\n  dr('Closed During this week (C)',rows.map(r=>r.bugs_C||0),prv.bugs_C||0,cur.bugs_C||0,true),\n  dr('Open: End of this week (A + B - C)',rows.map(r=>r.bugs_open_corrected||0),prv.bugs_open_corrected||0,cur.bugs_open_corrected||0,false),\n].join('');\n\nconst sumT=`<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;font-size:13px;min-width:700px\">${hdr}${mr}<tr><td colspan=\"6\" style=\"padding:6px\"></td></tr>${br}</table>`;\nconst bifT=`<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;font-size:13px;min-width:700px;margin-top:20px\">${hdr}${sec('Merp SOA Tasks')}${dr('Total Opened Tickets during this week (A=B+C)',rows.map(r=>r.merp_B||0),prv.merp_B||0,cur.merp_B||0,true)}<tr><td colspan=\"6\" style=\"padding:3px\"></td></tr>${dr('Business Tickets (B)',rows.map(r=>r.biz_opened||0),prv.biz_opened||0,cur.biz_opened||0,true)}${dr('Internally Opened Tickets (C)',rows.map(r=>r.int_opened||0),prv.int_opened||0,cur.int_opened||0,true)}</table>`;\n\nlet devH='';\nfor (const [dev,tasks] of Object.entries(cur.dev_tasks||{}).sort()){\n  if(!tasks.length)continue;\n  let f=true;\n  for(const t of tasks){\n    const dc=f?`<td rowspan=\"${tasks.length}\" style=\"vertical-align:top;padding:5px 10px;font-weight:bold\">${dev}</td>`:'';\n    devH+=`<tr>${dc}<td style=\"padding:4px 10px\">${t.type} #${t.id}: ${t.subject}</td></tr>`;\n    f=false;\n  }\n}\nconst devT=`<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;font-size:13px;min-width:700px;margin-top:20px\"><tr><th style=\"${TH};text-align:left;width:160px\">Developer</th><th style=\"${TH};text-align:center\">${wl(cur.start,cur.end)}</th></tr><tr><td style=\"padding:5px 10px\"></td><th style=\"background:${S};color:white;padding:5px 10px;text-align:center\">Tasks</th></tr>${devH}</table>`;\n\nconst weekOf = sl(currStart, currEnd);\nconst period = `${weekOf} ${cur.end.getFullYear()}`;\nconst tasksRows = extractSheetRows(tasksDetailEls, weekOf);\nconst bugsRows  = extractSheetRows(bugsDetailEls,  weekOf);\n\nconst html=`<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head><body style=\"font-family:Arial,sans-serif;font-size:13px;color:#222;max-width:900px\"><p>Hi All,</p><p>Please find the Weekly Task Report of BI-SOA from <strong>${period}</strong>.</p><p><strong>Key Highlights :</strong></p>${hl}${sumT}<p style=\"margin-top:20px\">Please find below the bifurcation of total tickets opened :-</p>${bifT}${devT}<br><p>Please refer below for a detailed tracker.<br><a href=\"${SHEET_URL}\">BI-SOA Detailed Tracker</a></p><br><p><em>Thanks &amp; Regards,<br>BI SOA Automation<br>IndiaMart Intermesh Limited</em></p></body></html>`;\nconst subject=`BI Weekly Report :BI SOA Task Status Report : ${period}`;\n\nreturn [{ json: { html, subject, tasksRows, bugsRows } }];\n"
+      }
+    },
+    {
+      "id": "b5e29348-04b8-4417-baba-5fc67e2deacc",
+      "name": "GSheets: Clear Tasks",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        2280,
+        290
+      ],
+      "parameters": {
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "value": "1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "TasksDetails",
+          "mode": "name"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "d0ca7989-03ab-4f18-b042-a8779335be9c",
+      "name": "GSheets: Clear Bugs",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        2480,
+        290
+      ],
+      "parameters": {
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "value": "1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "BugsDetails",
+          "mode": "name"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "c22713e1-a260-4a98-9ced-4164c147ac92",
+      "name": "Code: To Task Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2680,
+        290
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Code: Build Report').first().json;\nreturn (d.tasksRows || []).map(r => ({ json: r }));\n"
+      }
+    },
+    {
+      "id": "b0749bea-e24a-4ecd-9e9c-364c584f66f0",
+      "name": "GSheets: Append Tasks",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        2880,
+        290
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "TasksDetails",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "00f7b3ca-c80a-4093-afb4-fcab4aad80d3",
+      "name": "Code: To Bug Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3080,
+        290
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Code: Build Report').first().json;\nreturn (d.bugsRows || []).map(r => ({ json: r }));\n"
+      }
+    },
+    {
+      "id": "246397da-de36-4005-93eb-365f3ff55d0b",
+      "name": "GSheets: Append Bugs",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        3280,
+        290
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "BugsDetails",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "14e9c85d-91e3-400a-9b49-a75961e3b580",
+      "name": "Code: Restore Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3480,
+        290
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Code: Build Report').first().json;\nreturn [{ json: { html: d.html, subject: d.subject } }];\n"
+      }
+    },
+    {
+      "id": "497351de-f1e5-4e63-a49e-9ef4b5e4b86f",
+      "name": "Send Email via Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        3680,
+        290
+      ],
+      "parameters": {
+        "sendTo": "bireports@indiamart.com",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {
+          "ccList": "puneet.agarwal@indiamart.com,vipul.bansal1@indiamart.com"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code: Setup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code: Setup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Setup": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Merp Opened",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Merp Opened": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Merp Open End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Merp Open End": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Bugs Opened",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Bugs Opened": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Bugs Open End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Bugs Open End": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Dev Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Dev Tasks": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Tasks Detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Tasks Detail": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Bugs Detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Bugs Detail": {
+      "main": [
+        [
+          {
+            "node": "Code: Build Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Build Report": {
+      "main": [
+        [
+          {
+            "node": "GSheets: Clear Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GSheets: Clear Tasks": {
+      "main": [
+        [
+          {
+            "node": "GSheets: Clear Bugs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GSheets: Clear Bugs": {
+      "main": [
+        [
+          {
+            "node": "Code: To Task Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: To Task Rows": {
+      "main": [
+        [
+          {
+            "node": "GSheets: Append Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GSheets: Append Tasks": {
+      "main": [
+        [
+          {
+            "node": "Code: To Bug Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: To Bug Rows": {
+      "main": [
+        [
+          {
+            "node": "GSheets: Append Bugs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GSheets: Append Bugs": {
+      "main": [
+        [
+          {
+            "node": "Code: Restore Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Restore Email": {
+      "main": [
+        [
+          {
+            "node": "Send Email via Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
