@@ -1,0 +1,781 @@
+{
+  "name": "SOA Monthly Report",
+  "id": "15632cff-8479-4e98-b55f-d4970696adb9",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "8e5f3a52-64ad-41f7-8249-60a1a4b08dd3",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        200
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "bf2d6e8a-45cc-48c3-8a2f-4cfa7af5eaae",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        380
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 20 1 * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "1de8ca14-d772-460c-a57e-aaf9a8900ce4",
+      "name": "Code: Setup Monthly",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        290
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Replace YOUR_OP_TOKEN_HERE with your actual OpenProject API token\nconst OP_TOKEN = 'YOUR_OP_TOKEN_HERE';\n\nconst PROJECT_ID          = 75;\nconst YEAR_LOOKBACK_DAYS  = 365;\nconst API_BUG_TYPE_ID     = 19;\nconst ENV_STAGE_OPTION_ID = '22';\nconst OPEN_STATUS_IDS = [\n  39,44,88,36,97,42,37,40,43,46,96,59,60,61,62,63,47,98,\n  93,94,95,64,89,90,91,92,82,48,49,52,50,51,53,65,54,66,\n  67,68,57,69,71,72,73,74,75,76,77,78,79,80,81,1,38,99,100,101\n];\n\nfunction _b64(str) {\n  if (typeof Buffer !== 'undefined') return Buffer.from(str).toString('base64');\n  const C = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';\n  const b = Array.from(str).map(c => c.charCodeAt(0));\n  let o = '', i = 0;\n  while (i < b.length) {\n    const b0=b[i++], b1=b[i], b2=b[i+1]; i+=2;\n    o += C[b0>>2]+C[((b0&3)<<4)|(b1>>4||0)]+\n         (b1===undefined?'=':C[((b1&15)<<2)|(b2>>6||0)])+\n         (b2===undefined?'=':C[b2&63]);\n  }\n  return o;\n}\nconst authHeader = 'Basic ' + _b64('apikey:' + OP_TOKEN);\n\nfunction toISO(d) { return d.toISOString().slice(0,10); }\nfunction addDays(d,n) { const r=new Date(d); r.setDate(r.getDate()+n); return r; }\n\nconst today = new Date(); today.setHours(0,0,0,0);\n// Report on the most recently completed calendar month\nconst ms = new Date(today.getFullYear(), today.getMonth()-1, 1);\nconst me = new Date(today.getFullYear(), today.getMonth(), 0);\nconst ms_iso = toISO(ms), me_iso = toISO(me);\nconst cutoff  = toISO(addDays(me, -YEAR_LOOKBACK_DAYS));\n\nconst openIds = OPEN_STATUS_IDS.map(String);\nconst bugIds  = [String(API_BUG_TYPE_ID)];\nconst proj    = { project:      { operator: '=',   values: [String(PROJECT_ID)] } };\nconst open    = { status:       { operator: '=',   values: openIds } };\nconst notBug  = { type:         { operator: '!',   values: bugIds } };\nconst bug     = { type:         { operator: '=',   values: bugIds } };\nconst noStage = { customField9: { operator: '!',   values: [ENV_STAGE_OPTION_ID] } };\nconst yr      = { createdAt:    { operator: '<>d', values: [cutoff, me_iso] } };\nconst created_month = { createdAt: { operator: '<>d', values: [ms_iso, me_iso] } };\nconst updated_month = { updatedAt: { operator: '<>d', values: [ms_iso, me_iso] } };\n\nconst fj = (...extras) => JSON.stringify([proj, ...extras]);\n\nreturn [{ json: {\n  authHeader,\n  monthStart:         ms_iso,\n  monthEnd:           me_iso,\n  merpOpenedFilter:   fj(created_month, open, notBug),\n  merpOpenEndFilter:  fj(yr, open, notBug),\n  bugsOpenedFilter:   fj(created_month, open, bug, noStage),\n  bugsOpenEndFilter:  fj(yr, open, bug, noStage),\n  tasksDetailFilter:  fj(yr, open, notBug, updated_month),\n  bugsDetailFilter:   fj(yr, open, bug, noStage, updated_month),\n}}];\n"
+      }
+    },
+    {
+      "id": "0d28e0c3-664a-4a7a-9536-458dec591b73",
+      "name": "HTTP: Merp Opened",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        680,
+        290
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://project.intermesh.net/api/v3/work_packages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Code: Setup Monthly').first().json.authHeader }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filters",
+              "value": "={{ $('Code: Setup Monthly').first().json.merpOpenedFilter }}"
+            },
+            {
+              "name": "pageSize",
+              "value": "1000"
+            },
+            {
+              "name": "offset",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e5b592b6-0c48-4e3c-a6c3-610c3a90c05a",
+      "name": "HTTP: Merp Open End",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        880,
+        290
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://project.intermesh.net/api/v3/work_packages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Code: Setup Monthly').first().json.authHeader }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filters",
+              "value": "={{ $('Code: Setup Monthly').first().json.merpOpenEndFilter }}"
+            },
+            {
+              "name": "pageSize",
+              "value": "1000"
+            },
+            {
+              "name": "offset",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "832c292a-84ae-46ff-8e47-53c76bcdbfc6",
+      "name": "HTTP: Bugs Opened",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1080,
+        290
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://project.intermesh.net/api/v3/work_packages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Code: Setup Monthly').first().json.authHeader }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filters",
+              "value": "={{ $('Code: Setup Monthly').first().json.bugsOpenedFilter }}"
+            },
+            {
+              "name": "pageSize",
+              "value": "1000"
+            },
+            {
+              "name": "offset",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "bb21cd52-bb99-43cf-9115-df810fed0ee2",
+      "name": "HTTP: Bugs Open End",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1280,
+        290
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://project.intermesh.net/api/v3/work_packages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Code: Setup Monthly').first().json.authHeader }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filters",
+              "value": "={{ $('Code: Setup Monthly').first().json.bugsOpenEndFilter }}"
+            },
+            {
+              "name": "pageSize",
+              "value": "1000"
+            },
+            {
+              "name": "offset",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "cca4e686-f7a0-405c-94f1-1b2100538b92",
+      "name": "HTTP: Tasks Detail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1480,
+        290
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://project.intermesh.net/api/v3/work_packages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Code: Setup Monthly').first().json.authHeader }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filters",
+              "value": "={{ $('Code: Setup Monthly').first().json.tasksDetailFilter }}"
+            },
+            {
+              "name": "pageSize",
+              "value": "1000"
+            },
+            {
+              "name": "offset",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "304ec589-10bc-4e22-8e49-bd0a8a4bfd42",
+      "name": "HTTP: Bugs Detail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1780,
+        290
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://project.intermesh.net/api/v3/work_packages",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Code: Setup Monthly').first().json.authHeader }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filters",
+              "value": "={{ $('Code: Setup Monthly').first().json.bugsDetailFilter }}"
+            },
+            {
+              "name": "pageSize",
+              "value": "1000"
+            },
+            {
+              "name": "offset",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "ac0c33e5-34f1-4cba-b68a-d5a11881077d",
+      "name": "Code: Build Report Monthly",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1980,
+        290
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const BACKLOG_STATUS_IDS = new Set([1]);\nconst API_STORY_TYPE_ID  = 15;\nconst SHEET_URL = 'https://docs.google.com/spreadsheets/d/1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0';\n\nfunction linkId(links, key) {\n  const m = ((links?.[key]?.href)||'').match(/\\/(\\d+)$/);\n  return m ? parseInt(m[1]) : null;\n}\nfunction linkTitle(links, key, def='') { return (links?.[key]?.title)||def; }\n\nfunction getEls(nodeName) {\n  let r = $(nodeName).first().json;\n  if (r && r.data !== undefined) r = typeof r.data==='string' ? JSON.parse(r.data) : r.data;\n  if (!r || !r._embedded) throw new Error(`${nodeName} — unexpected: ${JSON.stringify(r).slice(0,400)}`);\n  return r._embedded.elements || [];\n}\n\nconst merpOpenedEls  = getEls('HTTP: Merp Opened');\nconst merpOpenEndEls = getEls('HTTP: Merp Open End');\nconst bugsOpenedEls  = getEls('HTTP: Bugs Opened');\nconst bugsOpenEndEls = getEls('HTTP: Bugs Open End');\nconst tasksDetailEls = getEls('HTTP: Tasks Detail');\nconst bugsDetailEls  = getEls('HTTP: Bugs Detail');\n\nconst merpB       = merpOpenedEls.length;\nconst merpOpenEnd = merpOpenEndEls.length;\nconst merpBacklog = merpOpenEndEls.filter(w => BACKLOG_STATUS_IDS.has(linkId(w._links,'status'))).length;\nconst merpWip     = merpOpenEnd - merpBacklog;\nconst bugsB       = bugsOpenedEls.length;\nconst bugsOpenEnd = bugsOpenEndEls.length;\nconst business    = merpOpenedEls.filter(w => linkId(w._links,'type')===API_STORY_TYPE_ID).length;\nconst internal    = merpB - business;\n\nfunction extractSheetRows(els, monthLabel) {\n  return els.map(wp => {\n    const links = wp._links || {};\n    const fmt = s => s ? s.slice(0,16).replace('T',' ') : '';\n    return {\n      ID: wp.id, Subject: wp.subject||'',\n      Type:        linkTitle(links,'type',''),\n      Status:      linkTitle(links,'status',''),\n      Author:      linkTitle(links,'author',''),\n      Assignee:    linkTitle(links,'assignee',''),\n      Accountable: linkTitle(links,'responsible',''),\n      'Updated on': fmt(wp.updatedAt),\n      'Created on': fmt(wp.createdAt),\n      'Month Of':  monthLabel,\n    };\n  });\n}\n\n// Rolling 4-month cache (seeded with PDF ground-truth values)\nconst staticData = $getWorkflowStaticData('global');\nif (!staticData.mcache) {\n  staticData.mcache = {\n    \"2026-03\": { merp_B:64, merp_C:29, merp_open:206, merp_wip:124, merp_backlog:82, bugs_B:24, bugs_C:10, bugs_open:30,  biz_opened:11, int_opened:53 },\n    \"2026-04\": { merp_B:74, merp_C:99, merp_open:181, merp_wip:95,  merp_backlog:86, bugs_B:24, bugs_C:25, bugs_open:29,  biz_opened:35, int_opened:39 },\n    \"2026-05\": { merp_B:96, merp_C:170,merp_open:107, merp_wip:88,  merp_backlog:19, bugs_B:40, bugs_C:10, bugs_open:21,  biz_opened:46, int_opened:50 },\n  };\n}\n\nconst setup    = $('Code: Setup Monthly').first().json;\nconst ms_iso   = setup.monthStart, me_iso = setup.monthEnd;\nconst currMs   = new Date(ms_iso+'T00:00:00');\nconst currKey  = ms_iso.slice(0,7);   // \"2026-05\"\n\nstaticData.mcache[currKey] = {\n  merp_B:merpB, merp_open:merpOpenEnd, merp_wip:merpWip, merp_backlog:merpBacklog,\n  bugs_B:bugsB, bugs_open:bugsOpenEnd, biz_opened:business, int_opened:internal,\n};\n\n// Build 4-month window\nconst months4 = [3,2,1,0].map(i => {\n  const s = new Date(currMs.getFullYear(), currMs.getMonth()-i, 1);\n  const e = new Date(currMs.getFullYear(), currMs.getMonth()-i+1, 0);\n  return [s,e];\n});\nconst rows = months4.map(([s,e]) => {\n  const k = `${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,'0')}`;\n  return { start:s, end:e, ...(staticData.mcache[k]||{}) };\n});\n\nfor (let i=0;i<rows.length;i++) {\n  const r=rows[i];\n  r.merp_open_corrected = r.merp_open||0;\n  r.bugs_open_corrected = r.bugs_open||0;\n  if (i===0) {\n    r.merp_A = (r.merp_open||0)-(r.merp_B||0)+(r.merp_C||0);\n    r.bugs_A  = (r.bugs_open||0)-(r.bugs_B||0)+(r.bugs_C||0);\n  } else {\n    r.merp_A = rows[i-1].merp_open||0;\n    r.bugs_A  = rows[i-1].bugs_open||0;\n  }\n  if (i===3) {\n    r.merp_C = r.merp_A+(r.merp_B||0)-(r.merp_open||0);\n    r.bugs_C  = r.bugs_A+(r.bugs_B||0)-(r.bugs_open||0);\n    staticData.mcache[currKey].merp_C = r.merp_C;\n    staticData.mcache[currKey].bugs_C  = r.bugs_C;\n  }\n}\n\nconst MS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];\nconst ML = ['January','February','March','April','May','June','July','August','September','October','November','December'];\nfunction pad(n) { return String(n).padStart(2,'0'); }\nfunction ml(s,e) { return `${pad(s.getDate())} ${MS[s.getMonth()]} - ${pad(e.getDate())} ${MS[e.getMonth()]}`; }\n\n// HTML generation (same style as weekly)\nconst H='#2E6B73',S='#5F9EA0';\nconst AB='#FFEB9C',AF='#9C6500',GB='#C6EFCE',GF='#375623',PB='#FFC7CE',PF='#9C0006';\nconst TH=`background:${H};color:white;padding:6px 10px;font-weight:bold`;\n\nfunction pct(cv,pv,gu=true) {\n  if(!pv) return '<td style=\"text-align:center;padding:5px 8px\">—</td>';\n  const d=cv-pv,p=Math.abs(d)/pv*100,ar=d>=0?'▲':'▼';\n  let bg,fg;\n  if(p<=5){bg=AB;fg=AF;}else if((d>0)===gu){bg=GB;fg=GF;}else{bg=PB;fg=PF;}\n  return `<td style=\"background:${bg};color:${fg};font-weight:bold;white-space:nowrap;text-align:center;padding:5px 8px\">${ar} ${p.toFixed(1)}%</td>`;\n}\nfunction num(n){return `<td style=\"text-align:right;padding:5px 10px\">${n}</td>`;}\n\nconst cur=rows[3],prv=rows[2];\nconst lbs=rows.map(r=>ml(r.start,r.end));\nconst cD=(cur.merp_C||0)-(prv.merp_C||0),cP=prv.merp_C?Math.abs(cD)/prv.merp_C*100:0;\nconst bD=(cur.bugs_open_corrected||0)-(prv.bugs_open_corrected||0),bP=prv.bugs_open_corrected?Math.abs(bD)/prv.bugs_open_corrected*100:0;\nconst hc=(d,p,g)=>p<=5?'#f39c12':(d>0)===g?'#27ae60':'#e74c3c';\n\nconst hl=`<ul>\n<li>The total number of <strong>closed tasks</strong> during this month has <strong>${cD>=0?'increased':'decreased'}</strong> by\n    <span style=\"color:${hc(cD,cP,true)};font-weight:bold\">${cD>=0?'▲':'▼'} ${cP.toFixed(1)}%</span> compared to the previous month's count.</li>\n<li>The total count of <strong>open bugs</strong> has <strong>${bD>=0?'increased':'decreased'}</strong> by\n    <span style=\"color:${hc(bD,bP,false)};font-weight:bold\">${bD>=0?'▲':'▼'} ${bP.toFixed(1)}%</span> compared to the previous month's count.</li>\n</ul>`;\n\nconst th=lbs.map(l=>`<th style=\"${TH};text-align:center\">${l}</th>`).join('');\nconst hdr=`<tr><th style=\"${TH};text-align:left\">Report Summary</th>${th}<th style=\"${TH};text-align:center\">(+/- Last Month)</th></tr>`;\nconst sec=l=>`<tr><td colspan=\"6\" style=\"background:${S};color:white;font-weight:bold;padding:5px 10px\">${l}</td></tr>`;\nconst dr=(label,vals,pv,cv,gu=true)=>`<tr><td style=\"padding:5px 10px\">${label}</td>${vals.map(num).join('')}${pct(cv,pv,gu)}</tr>`;\n\nconst mr=[\n  sec('Merp SOA Tasks'),\n  dr('Open: Beginning of this month (A)',rows.map(r=>r.merp_A||0),prv.merp_A||0,cur.merp_A||0,false),\n  dr('Opened During this month (B)',rows.map(r=>r.merp_B||0),prv.merp_B||0,cur.merp_B||0,false),\n  dr('Closed During this month (C)',rows.map(r=>r.merp_C||0),prv.merp_C||0,cur.merp_C||0,true),\n  dr('Open: End of this month (A + B - C)',rows.map(r=>r.merp_open_corrected||0),prv.merp_open_corrected||0,cur.merp_open_corrected||0,false),\n  '<tr><td colspan=\"6\" style=\"padding:3px\"></td></tr>',\n  dr('Items in Under Development (WIP)',rows.map(r=>r.merp_wip||0),prv.merp_wip||0,cur.merp_wip||0,true),\n  dr('Backlog (Yet to align)',rows.map(r=>r.merp_backlog||0),prv.merp_backlog||0,cur.merp_backlog||0,false),\n].join('');\n\nconst br=[\n  sec('SOA Bugs - Open Project Tickets'),\n  dr('Open : Beginning of this month (A)',rows.map(r=>r.bugs_A||0),prv.bugs_A||0,cur.bugs_A||0,false),\n  dr('Opened During this month (B)',rows.map(r=>r.bugs_B||0),prv.bugs_B||0,cur.bugs_B||0,false),\n  dr('Closed During this month (C)',rows.map(r=>r.bugs_C||0),prv.bugs_C||0,cur.bugs_C||0,true),\n  dr('Open: End of this month (A + B - C)',rows.map(r=>r.bugs_open_corrected||0),prv.bugs_open_corrected||0,cur.bugs_open_corrected||0,false),\n].join('');\n\nconst sumT=`<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;font-size:13px;min-width:700px\">${hdr}${mr}<tr><td colspan=\"6\" style=\"padding:6px\"></td></tr>${br}</table>`;\nconst bifT=`<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;font-size:13px;min-width:700px;margin-top:20px\">${hdr}${sec('Merp SOA Tasks')}${dr('Total Opened Tickets during this month (A=B+C)',rows.map(r=>r.merp_B||0),prv.merp_B||0,cur.merp_B||0,true)}<tr><td colspan=\"6\" style=\"padding:3px\"></td></tr>${dr('Business Tickets (B)',rows.map(r=>r.biz_opened||0),prv.biz_opened||0,cur.biz_opened||0,true)}${dr('Internally Opened Tickets (C)',rows.map(r=>r.int_opened||0),prv.int_opened||0,cur.int_opened||0,true)}</table>`;\n\nconst monthLabel  = ml(currMs, cur.end);\nconst monthName   = ML[currMs.getMonth()];\nconst monthYear   = cur.end.getFullYear();\nconst period      = `${pad(currMs.getDate())} ${ML[currMs.getMonth()]} to ${pad(cur.end.getDate())} ${ML[cur.end.getMonth()]} ${monthYear}`;\nconst sheetTabTasks = `${monthName}MonthsTasksDetails`;\nconst sheetTabBugs  = `${monthName}MonthsBugsDetails`;\nconst tasksRows = extractSheetRows(tasksDetailEls, monthLabel);\nconst bugsRows  = extractSheetRows(bugsDetailEls,  monthLabel);\n\nconst html=`<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head><body style=\"font-family:Arial,sans-serif;font-size:13px;color:#222;max-width:900px\"><p>Hi All,</p><p>Please find the Monthly Task Report of BI-SOA from <strong>${period}</strong>.</p><p><strong><u>Key Highlights :</u></strong></p>${hl}${sumT}<p style=\"margin-top:20px\">Please find below the bifurcation of total tickets opened :-</p>${bifT}<br><p>Please refer below for a detailed tracker.<br><a href=\"${SHEET_URL}\">BI-SOA Detailed Tracker</a></p><br><p><em>Thanks &amp; Regards,<br>BI SOA Automation<br>IndiaMart Intermesh Limited</em></p></body></html>`;\nconst subject=`BI Monthly Report :BI SOA Task Status Report : ${ML[currMs.getMonth()]} ${monthYear}`;\n\nreturn [{ json: { html, subject, tasksRows, bugsRows, sheetTabTasks, sheetTabBugs } }];\n"
+      }
+    },
+    {
+      "id": "80e46334-ba7b-4110-8d91-7f2664da3c40",
+      "name": "HTTP: Create Tasks Tab",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "continueOnFail": true,
+      "position": [
+        2180,
+        290
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({requests:[{addSheet:{properties:{title:$('Code: Build Report Monthly').first().json.sheetTabTasks}}}]}) }}",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "95488dfc-7583-4e61-a850-f23eed7bed66",
+      "name": "HTTP: Create Bugs Tab",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "continueOnFail": true,
+      "position": [
+        2380,
+        290
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({requests:[{addSheet:{properties:{title:$('Code: Build Report Monthly').first().json.sheetTabBugs}}}]}) }}",
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "41db244e-a97e-4cf1-8745-510505df730a",
+      "name": "GSheets: Clear Tasks (M)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        2480,
+        290
+      ],
+      "parameters": {
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "value": "1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Code: Build Report Monthly').first().json.sheetTabTasks }}",
+          "mode": "name"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "3266aaac-4a0b-4021-89e9-ed4753b0f9bd",
+      "name": "GSheets: Clear Bugs (M)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        2580,
+        290
+      ],
+      "parameters": {
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "value": "1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Code: Build Report Monthly').first().json.sheetTabBugs }}",
+          "mode": "name"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "ec361a11-1ee6-44ed-bc6f-21b1043907d3",
+      "name": "Code: To Task Rows (M)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2680,
+        290
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Code: Build Report Monthly').first().json;\nreturn (d.tasksRows || []).map(r => ({ json: r }));\n"
+      }
+    },
+    {
+      "id": "5796c15f-e412-4900-b1cd-9526ac982746",
+      "name": "GSheets: Append Tasks (M)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        2880,
+        290
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Code: Build Report Monthly').first().json.sheetTabTasks }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "96da4ceb-ce49-4825-b85a-b7e0aa1ae592",
+      "name": "Code: To Bug Rows (M)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3080,
+        290
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Code: Build Report Monthly').first().json;\nreturn (d.bugsRows || []).map(r => ({ json: r }));\n"
+      }
+    },
+    {
+      "id": "58967e95-e425-42a4-8e92-c6452a5cffce",
+      "name": "GSheets: Append Bugs (M)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        3280,
+        290
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Code: Build Report Monthly').first().json.sheetTabBugs }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "734f199b-5c24-489b-88b4-8ed2e5dad947",
+      "name": "Code: Restore Email (M)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3480,
+        290
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Code: Build Report Monthly').first().json;\nreturn [{ json: { html: d.html, subject: d.subject } }];\n"
+      }
+    },
+    {
+      "id": "0cf37cf1-9881-4160-bdfe-cce4e9bb32f9",
+      "name": "Send Email via Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        3680,
+        290
+      ],
+      "parameters": {
+        "sendTo": "bireports@indiamart.com",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {
+          "ccList": "puneet.agarwal@indiamart.com,vipul.bansal1@indiamart.com"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code: Setup Monthly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code: Setup Monthly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Setup Monthly": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Merp Opened",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Merp Opened": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Merp Open End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Merp Open End": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Bugs Opened",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Bugs Opened": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Bugs Open End",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Bugs Open End": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Tasks Detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Tasks Detail": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Bugs Detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Bugs Detail": {
+      "main": [
+        [
+          {
+            "node": "Code: Build Report Monthly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Build Report Monthly": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Create Tasks Tab",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Create Tasks Tab": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Create Bugs Tab",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Create Bugs Tab": {
+      "main": [
+        [
+          {
+            "node": "GSheets: Clear Tasks (M)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GSheets: Clear Tasks (M)": {
+      "main": [
+        [
+          {
+            "node": "GSheets: Clear Bugs (M)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GSheets: Clear Bugs (M)": {
+      "main": [
+        [
+          {
+            "node": "Code: To Task Rows (M)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: To Task Rows (M)": {
+      "main": [
+        [
+          {
+            "node": "GSheets: Append Tasks (M)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GSheets: Append Tasks (M)": {
+      "main": [
+        [
+          {
+            "node": "Code: To Bug Rows (M)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: To Bug Rows (M)": {
+      "main": [
+        [
+          {
+            "node": "GSheets: Append Bugs (M)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GSheets: Append Bugs (M)": {
+      "main": [
+        [
+          {
+            "node": "Code: Restore Email (M)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Restore Email (M)": {
+      "main": [
+        [
+          {
+            "node": "Send Email via Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

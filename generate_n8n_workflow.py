@@ -322,8 +322,34 @@ def http_node(name, filter_field, pos):
         }
     }
 
+# ── Helper: Google Sheets API node to create a sheet tab (static name) ───────
+def http_create_tab_static(name, tab_name, pos):
+    body = json.dumps({"requests": [{"addSheet": {"properties": {"title": tab_name}}}]})
+    return {
+        "id": str(uuid.uuid4()), "name": name,
+        "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.1,
+        "continueOnFail": True, "position": pos,
+        "parameters": {
+            "method": "POST",
+            "url": f"https://sheets.googleapis.com/v4/spreadsheets/{SHEET_ID}:batchUpdate",
+            "authentication": "predefinedCredentialType",
+            "nodeCredentialType": "googleSheetsOAuth2Api",
+            "sendBody": True,
+            "contentType": "raw",
+            "rawContentType": "application/json",
+            "body": body,
+            "options": {}
+        },
+        "credentials": {
+            "googleSheetsOAuth2Api": {
+                "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+                "name": "Google Sheets account"
+            }
+        }
+    }
+
 # ── Helper: Google Sheets node ────────────────────────────────────────────────
-def gsheets_node(name, operation, sheet_name, pos):
+def gsheets_node(name, operation, sheet_name, pos, continue_on_fail=False):
     params = {
         "operation": operation,
         "documentId": {"__rl": True, "value": SHEET_ID, "mode": "id"},
@@ -337,7 +363,7 @@ def gsheets_node(name, operation, sheet_name, pos):
             "schema": [],
         }
         params["options"] = {}
-    return {
+    node = {
         "id": str(uuid.uuid4()),
         "name": name,
         "type": "n8n-nodes-base.googleSheets",
@@ -351,6 +377,9 @@ def gsheets_node(name, operation, sheet_name, pos):
             }
         }
     }
+    if continue_on_fail:
+        node["continueOnFail"] = True
+    return node
 
 # ── Build workflow ────────────────────────────────────────────────────────────
 # Sequential chain — every upstream node reachable via $() from any downstream node:
@@ -381,19 +410,19 @@ build    = {"id":IDS['build'],    "name":"Code: Build Report",
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_BUILD}}
 to_tasks = {"id":IDS['toTaskRows'],"name":"Code: To Task Rows",
             "type":"n8n-nodes-base.code", "typeVersion":2,
-            "position":[2680,290],
+            "position":[3080,290],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_TO_TASK_ROWS}}
 to_bugs  = {"id":IDS['toBugRows'], "name":"Code: To Bug Rows",
             "type":"n8n-nodes-base.code", "typeVersion":2,
-            "position":[3080,290],
+            "position":[3480,290],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_TO_BUG_ROWS}}
 restore  = {"id":IDS['restore'],  "name":"Code: Restore Email",
             "type":"n8n-nodes-base.code", "typeVersion":2,
-            "position":[3480,290],
+            "position":[3880,290],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_RESTORE}}
 gmail    = {"id":IDS['gmail'],    "name":"Send Email via Gmail",
             "type":"n8n-nodes-base.gmail", "typeVersion":2.1,
-            "position":[3680,290],
+            "position":[4080,290],
             "parameters":{
                 "sendTo":    "bireports@indiamart.com",
                 "subject":   "={{ $json.subject }}",
@@ -412,18 +441,24 @@ http_nodes = [
     http_node("HTTP: Bugs Detail",   "bugsDetailFilter",  [1880, 290]),
 ]
 
+create_nodes = [
+    http_create_tab_static("HTTP: Create Tasks Tab", "TasksDetails", [2280, 290]),
+    http_create_tab_static("HTTP: Create Bugs Tab",  "BugsDetails",  [2480, 290]),
+]
+
 gsheet_nodes = [
-    gsheets_node("GSheets: Clear Tasks",  "clear",  "TasksDetails", [2280, 290]),
-    gsheets_node("GSheets: Clear Bugs",   "clear",  "BugsDetails",  [2480, 290]),
-    gsheets_node("GSheets: Append Tasks", "append", "TasksDetails", [2880, 290]),
-    gsheets_node("GSheets: Append Bugs",  "append", "BugsDetails",  [3280, 290]),
+    gsheets_node("GSheets: Clear Tasks",  "clear",  "TasksDetails", [2680, 290], continue_on_fail=True),
+    gsheets_node("GSheets: Clear Bugs",   "clear",  "BugsDetails",  [2880, 290], continue_on_fail=True),
+    gsheets_node("GSheets: Append Tasks", "append", "TasksDetails", [3280, 290]),
+    gsheets_node("GSheets: Append Bugs",  "append", "BugsDetails",  [3680, 290]),
 ]
 
 all_nodes = (
     [manual, schedule, setup]
     + http_nodes
-    + [build,
-       gsheet_nodes[0], gsheet_nodes[1],
+    + [build]
+    + create_nodes
+    + [gsheet_nodes[0], gsheet_nodes[1],
        to_tasks, gsheet_nodes[2],
        to_bugs,  gsheet_nodes[3],
        restore, gmail]
@@ -434,6 +469,7 @@ chain = (
     ["Code: Setup"]
     + http_names
     + ["Code: Build Report",
+       "HTTP: Create Tasks Tab", "HTTP: Create Bugs Tab",
        "GSheets: Clear Tasks", "GSheets: Clear Bugs",
        "Code: To Task Rows",   "GSheets: Append Tasks",
        "Code: To Bug Rows",    "GSheets: Append Bugs",
