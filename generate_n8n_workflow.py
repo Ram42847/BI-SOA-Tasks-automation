@@ -263,10 +263,17 @@ const period = `${weekOf} ${cur.end.getFullYear()}`;
 const tasksRows = extractSheetRows(tasksDetailEls, weekOf);
 const bugsRows  = extractSheetRows(bugsDetailEls,  weekOf);
 
+// Dynamic sheet tab names — include the week date range so each week is identifiable
+const weekLabel      = `${currStart.getDate()}${MS[currStart.getMonth()]}-${currEnd.getDate()}${MS[currEnd.getMonth()]}`;
+const sheetTabTasks  = `Tasks ${weekLabel}`;
+const sheetTabBugs   = `Bugs ${weekLabel}`;
+const sheetBodyTasks = JSON.stringify({requests:[{addSheet:{properties:{title:sheetTabTasks}}}]});
+const sheetBodyBugs  = JSON.stringify({requests:[{addSheet:{properties:{title:sheetTabBugs}}}]});
+
 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:Arial,sans-serif;font-size:13px;color:#222;max-width:900px"><p>Hi All,</p><p>Please find the Weekly Task Report of BI-SOA from <strong>${period}</strong>.</p><p><strong>Key Highlights :</strong></p>${hl}${sumT}<p style="margin-top:20px">Please find below the bifurcation of total tickets opened :-</p>${bifT}${devT}<br><p>Please refer below for a detailed tracker.<br><a href="${SHEET_URL}">BI-SOA Detailed Tracker</a></p><br><p><em>Thanks &amp; Regards,<br>BI SOA Automation<br>IndiaMart Intermesh Limited</em></p></body></html>`;
 const subject=`BI Weekly Report :BI SOA Task Status Report : ${period}`;
 
-return [{ json: { html, subject, tasksRows, bugsRows } }];
+return [{ json: { html, subject, tasksRows, bugsRows, sheetTabTasks, sheetTabBugs, sheetBodyTasks, sheetBodyBugs } }];
 """
 
 # ── Code: To Task Rows ────────────────────────────────────────────────────────
@@ -323,9 +330,9 @@ def http_node(name, filter_field, pos):
         }
     }
 
-# ── Helper: Google Sheets API node to create a sheet tab (static name) ───────
-def http_create_tab_static(name, tab_name, pos):
-    body = json.dumps({"requests": [{"addSheet": {"properties": {"title": tab_name}}}]})
+# ── Helper: Google Sheets API — create tab (body pre-built in Code: Build Report) ──
+def http_create_tab(name, body_field, pos):
+    body_expr = f"={{{{ $('Code: Build Report').first().json.{body_field} }}}}"
     return {
         "id": str(uuid.uuid4()), "name": name,
         "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.1,
@@ -338,7 +345,7 @@ def http_create_tab_static(name, tab_name, pos):
             "sendBody": True,
             "contentType": "raw",
             "rawContentType": "application/json",
-            "body": body,
+            "body": body_expr,
             "options": {}
         },
         "credentials": {
@@ -349,12 +356,13 @@ def http_create_tab_static(name, tab_name, pos):
         }
     }
 
-# ── Helper: Google Sheets node ────────────────────────────────────────────────
-def gsheets_node(name, operation, sheet_name, pos, continue_on_fail=False):
+# ── Helper: Google Sheets node (dynamic tab name from Code: Build Report) ────
+def gsheets_dynamic(name, operation, tab_field, pos, continue_on_fail=False):
+    sheet_expr = f"={{{{ $('Code: Build Report').first().json.{tab_field} }}}}"
     params = {
         "operation": operation,
         "documentId": {"__rl": True, "value": SHEET_ID, "mode": "id"},
-        "sheetName":  {"__rl": True, "value": sheet_name, "mode": "name"},
+        "sheetName":  {"__rl": True, "value": sheet_expr, "mode": "name"},
     }
     if operation == "append":
         params["columns"] = {
@@ -457,15 +465,15 @@ http_nodes = [
     http_node("HTTP: Bugs Detail",   "bugsDetailFilter",  [900, HTTP_Y[7]]),
 ]
 
-# Tasks path (parallel stream A)
-create_tasks = http_create_tab_static("HTTP: Create Tasks Tab", "TasksDetails", [1740, TA_Y])
-clear_tasks  = gsheets_node("GSheets: Clear Tasks",  "clear",  "TasksDetails", [2020, TA_Y], continue_on_fail=True)
-append_tasks = gsheets_node("GSheets: Append Tasks", "append", "TasksDetails", [2560, TA_Y], continue_on_fail=True)
+# Tasks path (parallel stream A) — tab name is dynamic e.g. "Tasks 22Jun-28Jun"
+create_tasks = http_create_tab("HTTP: Create Tasks Tab", "sheetBodyTasks", [1740, TA_Y])
+clear_tasks  = gsheets_dynamic("GSheets: Clear Tasks",  "clear",  "sheetTabTasks", [2020, TA_Y], continue_on_fail=True)
+append_tasks = gsheets_dynamic("GSheets: Append Tasks", "append", "sheetTabTasks", [2560, TA_Y], continue_on_fail=True)
 
-# Bugs path (parallel stream B)
-create_bugs  = http_create_tab_static("HTTP: Create Bugs Tab",  "BugsDetails",  [1740, BU_Y])
-clear_bugs   = gsheets_node("GSheets: Clear Bugs",   "clear",  "BugsDetails",  [2020, BU_Y], continue_on_fail=True)
-append_bugs  = gsheets_node("GSheets: Append Bugs",  "append", "BugsDetails",  [2560, BU_Y], continue_on_fail=True)
+# Bugs path (parallel stream B) — tab name is dynamic e.g. "Bugs 22Jun-28Jun"
+create_bugs  = http_create_tab("HTTP: Create Bugs Tab",  "sheetBodyBugs",  [1740, BU_Y])
+clear_bugs   = gsheets_dynamic("GSheets: Clear Bugs",   "clear",  "sheetTabBugs",  [2020, BU_Y], continue_on_fail=True)
+append_bugs  = gsheets_dynamic("GSheets: Append Bugs",  "append", "sheetTabBugs",  [2560, BU_Y], continue_on_fail=True)
 
 all_nodes = (
     [manual, schedule, setup]

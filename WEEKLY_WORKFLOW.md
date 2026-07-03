@@ -204,7 +204,7 @@ filters = [
 ---
 
 ### Node 8 — `HTTP: Tasks Detail`
-**Purpose:** Full records of non-bug tasks **updated this week** → rows for **TasksDetails** sheet
+**Purpose:** Full records of non-bug tasks **updated this week** → rows for **`Tasks 22Jun-28Jun`** sheet tab
 
 **API Call:**
 ```
@@ -222,7 +222,7 @@ filters = [
 ---
 
 ### Node 9 — `HTTP: Bugs Detail`
-**Purpose:** Full records of bug tickets **updated this week** → rows for **BugsDetails** sheet
+**Purpose:** Full records of bug tickets **updated this week** → rows for **`Bugs 22Jun-28Jun`** sheet tab
 
 **API Call:**
 ```
@@ -301,13 +301,16 @@ Runs in parallel with Path B and Path C after Build Report.
 ### Node 12 — `HTTP: Create Tasks Tab`
 **Type:** HTTP Request (Google Sheets API) | `continueOnFail: true`
 
-**Purpose:** Create the `TasksDetails` tab the first time — silently skips if already exists.
+**Purpose:** Create a week-specific tasks tab (e.g. `Tasks 22Jun-28Jun`) in the Google Sheet. Each week gets its own tab. Silently skips if it already exists.
 
 ```
 POST https://sheets.googleapis.com/v4/spreadsheets/1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q:batchUpdate
 Authorization: Google OAuth2
-Body: {"requests":[{"addSheet":{"properties":{"title":"TasksDetails"}}}]}
+Body: (value of sheetBodyTasks from Build Report)
+  e.g. {"requests":[{"addSheet":{"properties":{"title":"Tasks 22Jun-28Jun"}}}]}
 ```
+
+**Note:** Tab name and request body are pre-built in `Code: Build Report` as `sheetBodyTasks` to avoid n8n expression issues with nested braces.
 
 **Output → GSheets: Clear Tasks**
 
@@ -316,7 +319,9 @@ Body: {"requests":[{"addSheet":{"properties":{"title":"TasksDetails"}}}]}
 ### Node 13 — `GSheets: Clear Tasks`
 **Type:** Google Sheets (clear) | `continueOnFail: true`
 
-**Purpose:** Wipe all rows in `TasksDetails` before writing fresh data (prevents duplicates on re-run).
+**Purpose:** Wipe all rows in the current week's tasks tab before writing fresh data (safe to re-run).
+
+**Sheet target:** Dynamic — `sheetTabTasks` from Build Report (e.g. `Tasks 22Jun-28Jun`)
 
 **Output → Code: To Task Rows**
 
@@ -334,7 +339,9 @@ Body: {"requests":[{"addSheet":{"properties":{"title":"TasksDetails"}}}]}
 ### Node 15 — `GSheets: Append Tasks`
 **Type:** Google Sheets (append) | `continueOnFail: true`
 
-**Purpose:** Appends N task rows to `TasksDetails`. Each input item = one new row. Uses `autoMapInputData` — field names become column headers automatically.
+**Purpose:** Appends N task rows to the current week's tasks tab. Each item = one row. Uses `autoMapInputData` — field names become column headers automatically.
+
+**Sheet target:** Dynamic — `sheetTabTasks` (e.g. `Tasks 22Jun-28Jun`)
 
 ---
 
@@ -345,12 +352,13 @@ Runs in parallel with Path A and Path C after Build Report.
 ### Node 16 — `HTTP: Create Bugs Tab`
 **Type:** HTTP Request (Google Sheets API) | `continueOnFail: true`
 
-**Purpose:** Create the `BugsDetails` tab if it doesn't exist.
+**Purpose:** Create a week-specific bugs tab (e.g. `Bugs 22Jun-28Jun`) in the Google Sheet.
 
 ```
 POST https://sheets.googleapis.com/v4/spreadsheets/1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q:batchUpdate
 Authorization: Google OAuth2
-Body: {"requests":[{"addSheet":{"properties":{"title":"BugsDetails"}}}]}
+Body: (value of sheetBodyBugs from Build Report)
+  e.g. {"requests":[{"addSheet":{"properties":{"title":"Bugs 22Jun-28Jun"}}}]}
 ```
 
 **Output → GSheets: Clear Bugs**
@@ -360,7 +368,9 @@ Body: {"requests":[{"addSheet":{"properties":{"title":"BugsDetails"}}}]}
 ### Node 17 — `GSheets: Clear Bugs`
 **Type:** Google Sheets (clear) | `continueOnFail: true`
 
-**Purpose:** Wipe all rows in `BugsDetails` before writing fresh data.
+**Purpose:** Wipe all rows in the current week's bugs tab before writing fresh data.
+
+**Sheet target:** Dynamic — `sheetTabBugs` from Build Report (e.g. `Bugs 22Jun-28Jun`)
 
 **Output → Code: To Bug Rows**
 
@@ -378,7 +388,9 @@ Body: {"requests":[{"addSheet":{"properties":{"title":"BugsDetails"}}}]}
 ### Node 19 — `GSheets: Append Bugs`
 **Type:** Google Sheets (append) | `continueOnFail: true`
 
-**Purpose:** Appends M bug rows to `BugsDetails`.
+**Purpose:** Appends M bug rows to the current week's bugs tab.
+
+**Sheet target:** Dynamic — `sheetTabBugs` (e.g. `Bugs 22Jun-28Jun`)
 
 ---
 

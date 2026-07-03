@@ -1,13 +1,13 @@
 {
   "name": "SOA Monthly Report",
-  "id": "66d59acb-ae36-4876-89a6-83b077665c1d",
+  "id": "a83c2bb7-b518-4670-9a0b-f1bb0ffd41cf",
   "active": false,
   "settings": {
     "executionOrder": "v1"
   },
   "nodes": [
     {
-      "id": "91921dc1-2a46-4e63-81e5-68c5cdf485a8",
+      "id": "e7f55058-deb3-4ade-ac1e-cf0bddcc8d07",
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
@@ -18,7 +18,7 @@
       "parameters": {}
     },
     {
-      "id": "102cbf29-38b5-4bfa-99b8-54910022e5c0",
+      "id": "f0d36d2f-ca86-45fc-84c8-de223ba68bc1",
       "name": "Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -38,7 +38,7 @@
       }
     },
     {
-      "id": "c86d377c-08e7-4628-9840-1982a92ecf4b",
+      "id": "b4947f34-b4d5-4879-970c-2c19cb31e68e",
       "name": "Code: Setup Monthly",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -52,7 +52,7 @@
       }
     },
     {
-      "id": "ab9eb9a6-d2d1-427a-9e2c-d60aafe2c8da",
+      "id": "5cc58f0d-2b23-4e9e-b5a3-797a79f34755",
       "name": "HTTP: Merp Opened",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -94,7 +94,7 @@
       }
     },
     {
-      "id": "98ddeb5d-bd7f-4450-92ac-0acac2306632",
+      "id": "637b20e5-57f0-46e4-ace4-935888033754",
       "name": "HTTP: Merp Open End",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -136,7 +136,7 @@
       }
     },
     {
-      "id": "f586b77d-3684-4a78-aba8-396599e15247",
+      "id": "d41d830f-ffc1-4f8c-803a-7c9c69cd122c",
       "name": "HTTP: Bugs Opened",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -178,7 +178,7 @@
       }
     },
     {
-      "id": "57295597-4edd-46d0-8c48-42bb849e2e2a",
+      "id": "6ab4a3ad-4075-423b-aa88-7f13b0e20566",
       "name": "HTTP: Bugs Open End",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -220,7 +220,7 @@
       }
     },
     {
-      "id": "35d5e924-fb54-42b9-bebe-187f650d9d40",
+      "id": "4817911a-2158-4e56-9b96-50ba29bc736a",
       "name": "HTTP: Todo Tasks (M)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -262,7 +262,7 @@
       }
     },
     {
-      "id": "78998b32-de0f-44a8-a617-5440c1835a27",
+      "id": "486ad9bb-b9bc-4bbd-a75d-f08d6306c0f9",
       "name": "HTTP: Tasks Detail",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -304,7 +304,7 @@
       }
     },
     {
-      "id": "1dc685f5-ef0c-45d2-a6a3-ed4267ee9f48",
+      "id": "e5866887-b557-4cea-aad4-919d7bf4908a",
       "name": "HTTP: Bugs Detail",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -346,7 +346,7 @@
       }
     },
     {
-      "id": "d381fdac-2018-40a7-91d8-54ff16d88cc2",
+      "id": "67fb957a-d664-42e3-9d8b-288f1d4baecc",
       "name": "Merge",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
@@ -360,7 +360,7 @@
       }
     },
     {
-      "id": "f3dc1e23-8525-4ad1-bfa7-bccad402c946",
+      "id": "4401e441-8eab-4d6e-8192-84089d8d8353",
       "name": "Code: Build Report Monthly",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -370,11 +370,11 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const API_STORY_TYPE_ID  = 15;\nconst SHEET_URL = 'https://docs.google.com/spreadsheets/d/1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0';\n\nfunction linkId(links, key) {\n  const m = ((links?.[key]?.href)||'').match(/\\/(\\d+)$/);\n  return m ? parseInt(m[1]) : null;\n}\nfunction linkTitle(links, key, def='') { return (links?.[key]?.title)||def; }\n\nfunction getEls(nodeName) {\n  let r = $(nodeName).first().json;\n  if (r && r.data !== undefined) r = typeof r.data==='string' ? JSON.parse(r.data) : r.data;\n  if (!r || !r._embedded) throw new Error(`${nodeName} — unexpected: ${JSON.stringify(r).slice(0,400)}`);\n  return r._embedded.elements || [];\n}\n\nconst merpOpenedEls  = getEls('HTTP: Merp Opened');\nconst merpOpenEndEls = getEls('HTTP: Merp Open End');\nconst bugsOpenedEls  = getEls('HTTP: Bugs Opened');\nconst bugsOpenEndEls = getEls('HTTP: Bugs Open End');\nconst todoEls        = getEls('HTTP: Todo Tasks (M)');\nconst tasksDetailEls = getEls('HTTP: Tasks Detail');\nconst bugsDetailEls  = getEls('HTTP: Bugs Detail');\n\nconst merpB       = merpOpenedEls.length;\nconst merpOpenEnd = merpOpenEndEls.length;\nconst merpBacklog = todoEls.length;\nconst merpWip     = merpOpenEnd - merpBacklog;\nconst bugsB       = bugsOpenedEls.length;\nconst bugsOpenEnd = bugsOpenEndEls.length;\nconst business    = merpOpenedEls.filter(w => linkId(w._links,'type')===API_STORY_TYPE_ID).length;\nconst internal    = merpB - business;\n\nfunction extractSheetRows(els, monthLabel) {\n  return els.map(wp => {\n    const links = wp._links || {};\n    const fmt = s => s ? s.slice(0,16).replace('T',' ') : '';\n    return {\n      ID: wp.id, Subject: wp.subject||'',\n      Type:        linkTitle(links,'type',''),\n      Status:      linkTitle(links,'status',''),\n      Author:      linkTitle(links,'author',''),\n      Assignee:    linkTitle(links,'assignee',''),\n      Accountable: linkTitle(links,'responsible',''),\n      'Updated on': fmt(wp.updatedAt),\n      'Created on': fmt(wp.createdAt),\n      'Month Of':  monthLabel,\n    };\n  });\n}\n\n// Rolling 4-month cache (seeded with PDF ground-truth values)\nconst staticData = $getWorkflowStaticData('global');\nif (!staticData.mcache) {\n  staticData.mcache = {\n    \"2026-03\": { merp_B:64, merp_C:29, merp_open:206, merp_wip:124, merp_backlog:82, bugs_B:24, bugs_C:10, bugs_open:30,  biz_opened:11, int_opened:53 },\n    \"2026-04\": { merp_B:74, merp_C:99, merp_open:181, merp_wip:95,  merp_backlog:86, bugs_B:24, bugs_C:25, bugs_open:29,  biz_opened:35, int_opened:39 },\n    \"2026-05\": { merp_B:96, merp_C:170,merp_open:107, merp_wip:88,  merp_backlog:19, bugs_B:40, bugs_C:10, bugs_open:21,  biz_opened:46, int_opened:50 },\n  };\n}\n\nconst setup    = $('Code: Setup Monthly').first().json;\nconst ms_iso   = setup.monthStart, me_iso = setup.monthEnd;\nconst currMs   = new Date(ms_iso+'T00:00:00');\nconst currKey  = ms_iso.slice(0,7);   // \"2026-05\"\n\nstaticData.mcache[currKey] = {\n  merp_B:merpB, merp_open:merpOpenEnd, merp_wip:merpWip, merp_backlog:merpBacklog,\n  bugs_B:bugsB, bugs_open:bugsOpenEnd, biz_opened:business, int_opened:internal,\n};\n\n// Build 4-month window\nconst months4 = [3,2,1,0].map(i => {\n  const s = new Date(currMs.getFullYear(), currMs.getMonth()-i, 1);\n  const e = new Date(currMs.getFullYear(), currMs.getMonth()-i+1, 0);\n  return [s,e];\n});\nconst rows = months4.map(([s,e]) => {\n  const k = `${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,'0')}`;\n  return { start:s, end:e, ...(staticData.mcache[k]||{}) };\n});\n\nfor (let i=0;i<rows.length;i++) {\n  const r=rows[i];\n  r.merp_open_corrected = r.merp_open||0;\n  r.bugs_open_corrected = r.bugs_open||0;\n  if (i===0) {\n    r.merp_A = (r.merp_open||0)-(r.merp_B||0)+(r.merp_C||0);\n    r.bugs_A  = (r.bugs_open||0)-(r.bugs_B||0)+(r.bugs_C||0);\n  } else {\n    r.merp_A = rows[i-1].merp_open||0;\n    r.bugs_A  = rows[i-1].bugs_open||0;\n  }\n  if (i===3) {\n    r.merp_C = r.merp_A+(r.merp_B||0)-(r.merp_open||0);\n    r.bugs_C  = r.bugs_A+(r.bugs_B||0)-(r.bugs_open||0);\n    staticData.mcache[currKey].merp_C = r.merp_C;\n    staticData.mcache[currKey].bugs_C  = r.bugs_C;\n  }\n}\n\nconst MS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];\nconst ML = ['January','February','March','April','May','June','July','August','September','October','November','December'];\nfunction pad(n) { return String(n).padStart(2,'0'); }\nfunction ml(s,e) { return `${pad(s.getDate())} ${MS[s.getMonth()]} - ${pad(e.getDate())} ${MS[e.getMonth()]}`; }\n\n// HTML generation (same style as weekly)\nconst H='#2E6B73',S='#5F9EA0';\nconst AB='#FFEB9C',AF='#9C6500',GB='#C6EFCE',GF='#375623',PB='#FFC7CE',PF='#9C0006';\nconst TH=`background:${H};color:white;padding:6px 10px;font-weight:bold`;\n\nfunction pct(cv,pv,gu=true) {\n  if(!pv) return '<td style=\"text-align:center;padding:5px 8px\">—</td>';\n  const d=cv-pv,p=Math.abs(d)/pv*100,ar=d>=0?'▲':'▼';\n  let bg,fg;\n  if(p<=5){bg=AB;fg=AF;}else if((d>0)===gu){bg=GB;fg=GF;}else{bg=PB;fg=PF;}\n  return `<td style=\"background:${bg};color:${fg};font-weight:bold;white-space:nowrap;text-align:center;padding:5px 8px\">${ar} ${p.toFixed(1)}%</td>`;\n}\nfunction num(n){return `<td style=\"text-align:right;padding:5px 10px\">${n}</td>`;}\n\nconst cur=rows[3],prv=rows[2];\nconst lbs=rows.map(r=>ml(r.start,r.end));\nconst cD=(cur.merp_C||0)-(prv.merp_C||0),cP=prv.merp_C?Math.abs(cD)/prv.merp_C*100:0;\nconst bD=(cur.bugs_open_corrected||0)-(prv.bugs_open_corrected||0),bP=prv.bugs_open_corrected?Math.abs(bD)/prv.bugs_open_corrected*100:0;\nconst hc=(d,p,g)=>p<=5?'#f39c12':(d>0)===g?'#27ae60':'#e74c3c';\n\nconst hl=`<ul>\n<li>The total number of <strong>closed tasks</strong> during this month has <strong>${cD>=0?'increased':'decreased'}</strong> by\n    <span style=\"color:${hc(cD,cP,true)};font-weight:bold\">${cD>=0?'▲':'▼'} ${cP.toFixed(1)}%</span> compared to the previous month's count.</li>\n<li>The total count of <strong>open bugs</strong> has <strong>${bD>=0?'increased':'decreased'}</strong> by\n    <span style=\"color:${hc(bD,bP,false)};font-weight:bold\">${bD>=0?'▲':'▼'} ${bP.toFixed(1)}%</span> compared to the previous month's count.</li>\n</ul>`;\n\nconst th=lbs.map(l=>`<th style=\"${TH};text-align:center\">${l}</th>`).join('');\nconst hdr=`<tr><th style=\"${TH};text-align:left\">Report Summary</th>${th}<th style=\"${TH};text-align:center\">(+/- Last Month)</th></tr>`;\nconst sec=l=>`<tr><td colspan=\"6\" style=\"background:${S};color:white;font-weight:bold;padding:5px 10px\">${l}</td></tr>`;\nconst dr=(label,vals,pv,cv,gu=true)=>`<tr><td style=\"padding:5px 10px\">${label}</td>${vals.map(num).join('')}${pct(cv,pv,gu)}</tr>`;\n\nconst mr=[\n  sec('Merp SOA Tasks'),\n  dr('Open: Beginning of this month (A)',rows.map(r=>r.merp_A||0),prv.merp_A||0,cur.merp_A||0,false),\n  dr('Opened During this month (B)',rows.map(r=>r.merp_B||0),prv.merp_B||0,cur.merp_B||0,false),\n  dr('Closed During this month (C)',rows.map(r=>r.merp_C||0),prv.merp_C||0,cur.merp_C||0,true),\n  dr('Open: End of this month (A + B - C)',rows.map(r=>r.merp_open_corrected||0),prv.merp_open_corrected||0,cur.merp_open_corrected||0,false),\n  '<tr><td colspan=\"6\" style=\"padding:3px\"></td></tr>',\n  dr('Items in Under Development (WIP)',rows.map(r=>r.merp_wip||0),prv.merp_wip||0,cur.merp_wip||0,true),\n  dr('Backlog (Yet to align)',rows.map(r=>r.merp_backlog||0),prv.merp_backlog||0,cur.merp_backlog||0,false),\n].join('');\n\nconst br=[\n  sec('SOA Bugs - Open Project Tickets'),\n  dr('Open : Beginning of this month (A)',rows.map(r=>r.bugs_A||0),prv.bugs_A||0,cur.bugs_A||0,false),\n  dr('Opened During this month (B)',rows.map(r=>r.bugs_B||0),prv.bugs_B||0,cur.bugs_B||0,false),\n  dr('Closed During this month (C)',rows.map(r=>r.bugs_C||0),prv.bugs_C||0,cur.bugs_C||0,true),\n  dr('Open: End of this month (A + B - C)',rows.map(r=>r.bugs_open_corrected||0),prv.bugs_open_corrected||0,cur.bugs_open_corrected||0,false),\n].join('');\n\nconst sumT=`<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;font-size:13px;min-width:700px\">${hdr}${mr}<tr><td colspan=\"6\" style=\"padding:6px\"></td></tr>${br}</table>`;\nconst bifT=`<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;font-size:13px;min-width:700px;margin-top:20px\">${hdr}${sec('Merp SOA Tasks')}${dr('Total Opened Tickets during this month (A=B+C)',rows.map(r=>r.merp_B||0),prv.merp_B||0,cur.merp_B||0,true)}<tr><td colspan=\"6\" style=\"padding:3px\"></td></tr>${dr('Business Tickets (B)',rows.map(r=>r.biz_opened||0),prv.biz_opened||0,cur.biz_opened||0,true)}${dr('Internally Opened Tickets (C)',rows.map(r=>r.int_opened||0),prv.int_opened||0,cur.int_opened||0,true)}</table>`;\n\nconst monthLabel  = ml(currMs, cur.end);\nconst monthName   = ML[currMs.getMonth()];\nconst monthYear   = cur.end.getFullYear();\nconst period      = `${pad(currMs.getDate())} ${ML[currMs.getMonth()]} to ${pad(cur.end.getDate())} ${ML[cur.end.getMonth()]} ${monthYear}`;\nconst sheetTabTasks = `${monthName}MonthsTasksDetails`;\nconst sheetTabBugs  = `${monthName}MonthsBugsDetails`;\nconst sheetBodyTasks = JSON.stringify({requests:[{addSheet:{properties:{title:sheetTabTasks}}}]});\nconst sheetBodyBugs  = JSON.stringify({requests:[{addSheet:{properties:{title:sheetTabBugs}}}]});\nconst tasksRows = extractSheetRows(tasksDetailEls, monthLabel);\nconst bugsRows  = extractSheetRows(bugsDetailEls,  monthLabel);\n\nconst html=`<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head><body style=\"font-family:Arial,sans-serif;font-size:13px;color:#222;max-width:900px\"><p>Hi All,</p><p>Please find the Monthly Task Report of BI-SOA from <strong>${period}</strong>.</p><p><strong><u>Key Highlights :</u></strong></p>${hl}${sumT}<p style=\"margin-top:20px\">Please find below the bifurcation of total tickets opened :-</p>${bifT}<br><p>Please refer below for a detailed tracker.<br><a href=\"${SHEET_URL}\">BI-SOA Detailed Tracker</a></p><br><p><em>Thanks &amp; Regards,<br>BI SOA Automation<br>IndiaMart Intermesh Limited</em></p></body></html>`;\nconst subject=`BI Monthly Report :BI SOA Task Status Report : ${ML[currMs.getMonth()]} ${monthYear}`;\n\nreturn [{ json: { html, subject, tasksRows, bugsRows, sheetTabTasks, sheetTabBugs, sheetBodyTasks, sheetBodyBugs } }];\n"
+        "jsCode": "const API_STORY_TYPE_ID  = 15;\nconst SHEET_URL = 'https://docs.google.com/spreadsheets/d/1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0';\n\nfunction linkId(links, key) {\n  const m = ((links?.[key]?.href)||'').match(/\\/(\\d+)$/);\n  return m ? parseInt(m[1]) : null;\n}\nfunction linkTitle(links, key, def='') { return (links?.[key]?.title)||def; }\n\nfunction getEls(nodeName) {\n  let r = $(nodeName).first().json;\n  if (r && r.data !== undefined) r = typeof r.data==='string' ? JSON.parse(r.data) : r.data;\n  if (!r || !r._embedded) throw new Error(`${nodeName} — unexpected: ${JSON.stringify(r).slice(0,400)}`);\n  return r._embedded.elements || [];\n}\n\nconst merpOpenedEls  = getEls('HTTP: Merp Opened');\nconst merpOpenEndEls = getEls('HTTP: Merp Open End');\nconst bugsOpenedEls  = getEls('HTTP: Bugs Opened');\nconst bugsOpenEndEls = getEls('HTTP: Bugs Open End');\nconst todoEls        = getEls('HTTP: Todo Tasks (M)');\nconst tasksDetailEls = getEls('HTTP: Tasks Detail');\nconst bugsDetailEls  = getEls('HTTP: Bugs Detail');\n\nconst merpB       = merpOpenedEls.length;\nconst merpOpenEnd = merpOpenEndEls.length;\nconst merpBacklog = todoEls.length;\nconst merpWip     = merpOpenEnd - merpBacklog;\nconst bugsB       = bugsOpenedEls.length;\nconst bugsOpenEnd = bugsOpenEndEls.length;\nconst business    = merpOpenedEls.filter(w => linkId(w._links,'type')===API_STORY_TYPE_ID).length;\nconst internal    = merpB - business;\n\nfunction extractSheetRows(els, monthLabel) {\n  return els.map(wp => {\n    const links = wp._links || {};\n    const fmt = s => s ? s.slice(0,16).replace('T',' ') : '';\n    return {\n      ID: wp.id, Subject: wp.subject||'',\n      Type:        linkTitle(links,'type',''),\n      Status:      linkTitle(links,'status',''),\n      Author:      linkTitle(links,'author',''),\n      Assignee:    linkTitle(links,'assignee',''),\n      Accountable: linkTitle(links,'responsible',''),\n      'Updated on': fmt(wp.updatedAt),\n      'Created on': fmt(wp.createdAt),\n      'Month Of':  monthLabel,\n    };\n  });\n}\n\n// Rolling 4-month cache (seeded with PDF ground-truth values)\nconst staticData = $getWorkflowStaticData('global');\nif (!staticData.mcache) {\n  staticData.mcache = {\n    \"2026-03\": { merp_B:64, merp_C:29, merp_open:206, merp_wip:124, merp_backlog:82, bugs_B:24, bugs_C:10, bugs_open:30,  biz_opened:11, int_opened:53 },\n    \"2026-04\": { merp_B:74, merp_C:99, merp_open:181, merp_wip:95,  merp_backlog:86, bugs_B:24, bugs_C:25, bugs_open:29,  biz_opened:35, int_opened:39 },\n    \"2026-05\": { merp_B:96, merp_C:170,merp_open:107, merp_wip:88,  merp_backlog:19, bugs_B:40, bugs_C:10, bugs_open:21,  biz_opened:46, int_opened:50 },\n  };\n}\n\nconst setup    = $('Code: Setup Monthly').first().json;\nconst ms_iso   = setup.monthStart, me_iso = setup.monthEnd;\nconst currMs   = new Date(ms_iso+'T00:00:00');\nconst currKey  = ms_iso.slice(0,7);   // \"2026-05\"\n\nstaticData.mcache[currKey] = {\n  merp_B:merpB, merp_open:merpOpenEnd, merp_wip:merpWip, merp_backlog:merpBacklog,\n  bugs_B:bugsB, bugs_open:bugsOpenEnd, biz_opened:business, int_opened:internal,\n};\n\n// Build 4-month window\nconst months4 = [3,2,1,0].map(i => {\n  const s = new Date(currMs.getFullYear(), currMs.getMonth()-i, 1);\n  const e = new Date(currMs.getFullYear(), currMs.getMonth()-i+1, 0);\n  return [s,e];\n});\nconst rows = months4.map(([s,e]) => {\n  const k = `${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,'0')}`;\n  return { start:s, end:e, ...(staticData.mcache[k]||{}) };\n});\n\nfor (let i=0;i<rows.length;i++) {\n  const r=rows[i];\n  r.merp_open_corrected = r.merp_open||0;\n  r.bugs_open_corrected = r.bugs_open||0;\n  if (i===0) {\n    r.merp_A = (r.merp_open||0)-(r.merp_B||0)+(r.merp_C||0);\n    r.bugs_A  = (r.bugs_open||0)-(r.bugs_B||0)+(r.bugs_C||0);\n  } else {\n    r.merp_A = rows[i-1].merp_open||0;\n    r.bugs_A  = rows[i-1].bugs_open||0;\n  }\n  if (i===3) {\n    r.merp_C = r.merp_A+(r.merp_B||0)-(r.merp_open||0);\n    r.bugs_C  = r.bugs_A+(r.bugs_B||0)-(r.bugs_open||0);\n    staticData.mcache[currKey].merp_C = r.merp_C;\n    staticData.mcache[currKey].bugs_C  = r.bugs_C;\n  }\n}\n\nconst MS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];\nconst ML = ['January','February','March','April','May','June','July','August','September','October','November','December'];\nfunction pad(n) { return String(n).padStart(2,'0'); }\nfunction ml(s,e) { return `${pad(s.getDate())} ${MS[s.getMonth()]} - ${pad(e.getDate())} ${MS[e.getMonth()]}`; }\n\n// HTML generation (same style as weekly)\nconst H='#2E6B73',S='#5F9EA0';\nconst AB='#FFEB9C',AF='#9C6500',GB='#C6EFCE',GF='#375623',PB='#FFC7CE',PF='#9C0006';\nconst TH=`background:${H};color:white;padding:6px 10px;font-weight:bold`;\n\nfunction pct(cv,pv,gu=true) {\n  if(!pv) return '<td style=\"text-align:center;padding:5px 8px\">—</td>';\n  const d=cv-pv,p=Math.abs(d)/pv*100,ar=d>=0?'▲':'▼';\n  let bg,fg;\n  if(p<=5){bg=AB;fg=AF;}else if((d>0)===gu){bg=GB;fg=GF;}else{bg=PB;fg=PF;}\n  return `<td style=\"background:${bg};color:${fg};font-weight:bold;white-space:nowrap;text-align:center;padding:5px 8px\">${ar} ${p.toFixed(1)}%</td>`;\n}\nfunction num(n){return `<td style=\"text-align:right;padding:5px 10px\">${n}</td>`;}\n\nconst cur=rows[3],prv=rows[2];\nconst lbs=rows.map(r=>ml(r.start,r.end));\nconst cD=(cur.merp_C||0)-(prv.merp_C||0),cP=prv.merp_C?Math.abs(cD)/prv.merp_C*100:0;\nconst bD=(cur.bugs_open_corrected||0)-(prv.bugs_open_corrected||0),bP=prv.bugs_open_corrected?Math.abs(bD)/prv.bugs_open_corrected*100:0;\nconst hc=(d,p,g)=>p<=5?'#f39c12':(d>0)===g?'#27ae60':'#e74c3c';\n\nconst hl=`<ul>\n<li>The total number of <strong>closed tasks</strong> during this month has <strong>${cD>=0?'increased':'decreased'}</strong> by\n    <span style=\"color:${hc(cD,cP,true)};font-weight:bold\">${cD>=0?'▲':'▼'} ${cP.toFixed(1)}%</span> compared to the previous month's count.</li>\n<li>The total count of <strong>open bugs</strong> has <strong>${bD>=0?'increased':'decreased'}</strong> by\n    <span style=\"color:${hc(bD,bP,false)};font-weight:bold\">${bD>=0?'▲':'▼'} ${bP.toFixed(1)}%</span> compared to the previous month's count.</li>\n</ul>`;\n\nconst th=lbs.map(l=>`<th style=\"${TH};text-align:center\">${l}</th>`).join('');\nconst hdr=`<tr><th style=\"${TH};text-align:left\">Report Summary</th>${th}<th style=\"${TH};text-align:center\">(+/- Last Month)</th></tr>`;\nconst sec=l=>`<tr><td colspan=\"6\" style=\"background:${S};color:white;font-weight:bold;padding:5px 10px\">${l}</td></tr>`;\nconst dr=(label,vals,pv,cv,gu=true)=>`<tr><td style=\"padding:5px 10px\">${label}</td>${vals.map(num).join('')}${pct(cv,pv,gu)}</tr>`;\n\nconst mr=[\n  sec('Merp SOA Tasks'),\n  dr('Open: Beginning of this month (A)',rows.map(r=>r.merp_A||0),prv.merp_A||0,cur.merp_A||0,false),\n  dr('Opened During this month (B)',rows.map(r=>r.merp_B||0),prv.merp_B||0,cur.merp_B||0,false),\n  dr('Closed During this month (C)',rows.map(r=>r.merp_C||0),prv.merp_C||0,cur.merp_C||0,true),\n  dr('Open: End of this month (A + B - C)',rows.map(r=>r.merp_open_corrected||0),prv.merp_open_corrected||0,cur.merp_open_corrected||0,false),\n  '<tr><td colspan=\"6\" style=\"padding:3px\"></td></tr>',\n  dr('Items in Under Development (WIP)',rows.map(r=>r.merp_wip||0),prv.merp_wip||0,cur.merp_wip||0,true),\n  dr('Backlog (Yet to align)',rows.map(r=>r.merp_backlog||0),prv.merp_backlog||0,cur.merp_backlog||0,false),\n].join('');\n\nconst br=[\n  sec('SOA Bugs - Open Project Tickets'),\n  dr('Open : Beginning of this month (A)',rows.map(r=>r.bugs_A||0),prv.bugs_A||0,cur.bugs_A||0,false),\n  dr('Opened During this month (B)',rows.map(r=>r.bugs_B||0),prv.bugs_B||0,cur.bugs_B||0,false),\n  dr('Closed During this month (C)',rows.map(r=>r.bugs_C||0),prv.bugs_C||0,cur.bugs_C||0,true),\n  dr('Open: End of this month (A + B - C)',rows.map(r=>r.bugs_open_corrected||0),prv.bugs_open_corrected||0,cur.bugs_open_corrected||0,false),\n].join('');\n\nconst sumT=`<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;font-size:13px;min-width:700px\">${hdr}${mr}<tr><td colspan=\"6\" style=\"padding:6px\"></td></tr>${br}</table>`;\nconst bifT=`<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;font-size:13px;min-width:700px;margin-top:20px\">${hdr}${sec('Merp SOA Tasks')}${dr('Total Opened Tickets during this month (A=B+C)',rows.map(r=>r.merp_B||0),prv.merp_B||0,cur.merp_B||0,true)}<tr><td colspan=\"6\" style=\"padding:3px\"></td></tr>${dr('Business Tickets (B)',rows.map(r=>r.biz_opened||0),prv.biz_opened||0,cur.biz_opened||0,true)}${dr('Internally Opened Tickets (C)',rows.map(r=>r.int_opened||0),prv.int_opened||0,cur.int_opened||0,true)}</table>`;\n\nconst monthLabel  = ml(currMs, cur.end);\nconst monthName   = ML[currMs.getMonth()];\nconst monthYear   = cur.end.getFullYear();\nconst period      = `${pad(currMs.getDate())} ${ML[currMs.getMonth()]} to ${pad(cur.end.getDate())} ${ML[cur.end.getMonth()]} ${monthYear}`;\nconst sheetTabTasks = `Tasks ${MS[currMs.getMonth()]}${monthYear}`;\nconst sheetTabBugs  = `Bugs ${MS[currMs.getMonth()]}${monthYear}`;\nconst sheetBodyTasks = JSON.stringify({requests:[{addSheet:{properties:{title:sheetTabTasks}}}]});\nconst sheetBodyBugs  = JSON.stringify({requests:[{addSheet:{properties:{title:sheetTabBugs}}}]});\nconst tasksRows = extractSheetRows(tasksDetailEls, monthLabel);\nconst bugsRows  = extractSheetRows(bugsDetailEls,  monthLabel);\n\nconst html=`<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head><body style=\"font-family:Arial,sans-serif;font-size:13px;color:#222;max-width:900px\"><p>Hi All,</p><p>Please find the Monthly Task Report of BI-SOA from <strong>${period}</strong>.</p><p><strong><u>Key Highlights :</u></strong></p>${hl}${sumT}<p style=\"margin-top:20px\">Please find below the bifurcation of total tickets opened :-</p>${bifT}<br><p>Please refer below for a detailed tracker.<br><a href=\"${SHEET_URL}\">BI-SOA Detailed Tracker</a></p><br><p><em>Thanks &amp; Regards,<br>BI SOA Automation<br>IndiaMart Intermesh Limited</em></p></body></html>`;\nconst subject=`BI Monthly Report :BI SOA Task Status Report : ${ML[currMs.getMonth()]} ${monthYear}`;\n\nreturn [{ json: { html, subject, tasksRows, bugsRows, sheetTabTasks, sheetTabBugs, sheetBodyTasks, sheetBodyBugs } }];\n"
       }
     },
     {
-      "id": "777f59c2-838b-4187-b262-57b5b4137899",
+      "id": "75c71b11-12e3-4f42-b77a-d264f919a4dd",
       "name": "HTTP: Create Tasks Tab",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -402,7 +402,7 @@
       }
     },
     {
-      "id": "8f7666ae-eadc-4bdd-a624-8113ef75f4ac",
+      "id": "ef4225a4-ef1e-4148-906c-fd50b5c71704",
       "name": "GSheets: Clear Tasks (M)",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
@@ -432,7 +432,7 @@
       "continueOnFail": true
     },
     {
-      "id": "c806cc50-b6df-4ba1-8d4e-c04c5aaa1177",
+      "id": "4c6bf345-903a-4556-8eaa-0d57445f03b7",
       "name": "Code: To Task Rows (M)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -446,7 +446,7 @@
       }
     },
     {
-      "id": "409572dd-f68a-4905-8b11-7cb559179f81",
+      "id": "eb1b2987-9dbe-42ed-a65c-9612bca08aa7",
       "name": "GSheets: Append Tasks (M)",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
@@ -483,7 +483,7 @@
       "continueOnFail": true
     },
     {
-      "id": "55b9e605-ee47-45ec-8b92-cf05444b595f",
+      "id": "58426878-98e7-4f6f-b6ce-12bfee0dfb11",
       "name": "HTTP: Create Bugs Tab",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -511,7 +511,7 @@
       }
     },
     {
-      "id": "bcc67da1-cece-4ec0-96d8-3b889f97c321",
+      "id": "ee707e7d-fc73-410e-ac56-b6541188f9a7",
       "name": "GSheets: Clear Bugs (M)",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
@@ -541,7 +541,7 @@
       "continueOnFail": true
     },
     {
-      "id": "bfcf7188-6776-422d-a8a9-6a31fca4b991",
+      "id": "a5ff5478-50ac-4e24-981c-33df9004846a",
       "name": "Code: To Bug Rows (M)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -555,7 +555,7 @@
       }
     },
     {
-      "id": "f4c3a965-a236-4447-afa6-2f5b7f3d5b51",
+      "id": "f775eb1e-92a4-40fa-919b-437c7c7d90cd",
       "name": "GSheets: Append Bugs (M)",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
@@ -592,7 +592,7 @@
       "continueOnFail": true
     },
     {
-      "id": "9802d01b-a215-429c-83c5-36a7d54fc94b",
+      "id": "d2d45be5-5a21-4a25-9353-a19f5a2d0aef",
       "name": "Code: Restore Email (M)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -606,7 +606,7 @@
       }
     },
     {
-      "id": "ec44e56c-708b-442e-8cec-88e3405f8328",
+      "id": "9c5f6a60-1e74-49bc-9754-16a85462a40b",
       "name": "Send Email via Gmail",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,

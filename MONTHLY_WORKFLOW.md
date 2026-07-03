@@ -187,7 +187,7 @@ filters = [
 ---
 
 ### Node 7 — `HTTP: Tasks Detail`
-**Purpose:** Full records of non-bug tasks **updated this month** → rows for **`<Month>MonthsTasksDetails`** sheet
+**Purpose:** Full records of non-bug tasks **updated this month** → rows for **`Tasks Jun2026`** sheet
 
 **API Call:**
 ```
@@ -205,7 +205,7 @@ filters = [
 ---
 
 ### Node 8 — `HTTP: Bugs Detail`
-**Purpose:** Full records of bug tickets **updated this month**, excluding STAGE → rows for **`<Month>MonthsBugsDetails`** sheet
+**Purpose:** Full records of bug tickets **updated this month**, excluding STAGE → rows for **`Bugs Jun2026`** sheet
 
 **API Call:**
 ```
@@ -263,8 +263,8 @@ Reads all 7 HTTP node responses (via `$('HTTP: ...')` references) and computes a
 - Pre-seeded with Mar, Apr, May 2026 values
 
 **Dynamic sheet tab names (change every month):**
-- `sheetTabTasks` = e.g. `"JuneMonthsTasksDetails"`
-- `sheetTabBugs` = e.g. `"JuneMonthsBugsDetails"`
+- `sheetTabTasks` = e.g. `"Tasks Jun2026"`
+- `sheetTabBugs` = e.g. `"Bugs Jun2026"`
 - `sheetBodyTasks` = pre-built JSON for Sheets API batchUpdate (tasks tab)
 - `sheetBodyBugs` = pre-built JSON for Sheets API batchUpdate (bugs tab)
 
@@ -280,8 +280,8 @@ Reads all 7 HTTP node responses (via `$('HTTP: ...')` references) and computes a
 | `subject` | Email subject line |
 | `tasksRows` | Array of task rows for Google Sheets |
 | `bugsRows` | Array of bug rows for Google Sheets |
-| `sheetTabTasks` | Dynamic tab name e.g. `JuneMonthsTasksDetails` |
-| `sheetTabBugs` | Dynamic tab name e.g. `JuneMonthsBugsDetails` |
+| `sheetTabTasks` | Dynamic tab name e.g. `Tasks Jun2026` |
+| `sheetTabBugs` | Dynamic tab name e.g. `Bugs Jun2026` |
 | `sheetBodyTasks` | Pre-built Sheets API request body (tasks) |
 | `sheetBodyBugs` | Pre-built Sheets API request body (bugs) |
 
@@ -294,13 +294,13 @@ Runs in parallel with Path B and Path C after Build Report.
 ### Node 11 — `HTTP: Create Tasks Tab`
 **Type:** HTTP Request (Google Sheets API) | `continueOnFail: true`
 
-**Purpose:** Create a new month-specific tasks tab (e.g. `JuneMonthsTasksDetails`) in the Google Sheet. Silently skips if it already exists.
+**Purpose:** Create a new month-specific tasks tab (e.g. `Tasks Jun2026`) in the Google Sheet. Silently skips if it already exists.
 
 ```
 POST https://sheets.googleapis.com/v4/spreadsheets/1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q:batchUpdate
 Authorization: Google OAuth2
 Body: value of sheetBodyTasks from Build Report
-  e.g. {"requests":[{"addSheet":{"properties":{"title":"JuneMonthsTasksDetails"}}}]}
+  e.g. {"requests":[{"addSheet":{"properties":{"title":"Tasks Jun2026"}}}]}
 ```
 
 **Note:** The body is the pre-built `sheetBodyTasks` string from Build Report (built in JavaScript to avoid n8n expression parser issues with nested braces).
@@ -314,7 +314,7 @@ Body: value of sheetBodyTasks from Build Report
 
 **Purpose:** Wipe all rows in the current month's tasks tab before writing fresh data.
 
-**Sheet target:** Dynamic — `sheetTabTasks` from Build Report (e.g. `JuneMonthsTasksDetails`)
+**Sheet target:** Dynamic — `sheetTabTasks` from Build Report (e.g. `Tasks Jun2026`)
 
 **Output → Code: To Task Rows (M)**
 
@@ -334,7 +334,7 @@ Body: value of sheetBodyTasks from Build Report
 
 **Purpose:** Appends N task rows to the month's tasks tab. Each input item = one new row. Uses `autoMapInputData`.
 
-**Sheet target:** Dynamic — `sheetTabTasks` (e.g. `JuneMonthsTasksDetails`)
+**Sheet target:** Dynamic — `sheetTabTasks` (e.g. `Tasks Jun2026`)
 
 ---
 
@@ -345,13 +345,13 @@ Runs in parallel with Path A and Path C after Build Report.
 ### Node 15 — `HTTP: Create Bugs Tab`
 **Type:** HTTP Request (Google Sheets API) | `continueOnFail: true`
 
-**Purpose:** Create a new month-specific bugs tab (e.g. `JuneMonthsBugsDetails`) in the Google Sheet.
+**Purpose:** Create a new month-specific bugs tab (e.g. `Bugs Jun2026`) in the Google Sheet.
 
 ```
 POST https://sheets.googleapis.com/v4/spreadsheets/1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q:batchUpdate
 Authorization: Google OAuth2
 Body: value of sheetBodyBugs from Build Report
-  e.g. {"requests":[{"addSheet":{"properties":{"title":"JuneMonthsBugsDetails"}}}]}
+  e.g. {"requests":[{"addSheet":{"properties":{"title":"Bugs Jun2026"}}}]}
 ```
 
 **Output → GSheets: Clear Bugs (M)**
@@ -363,7 +363,7 @@ Body: value of sheetBodyBugs from Build Report
 
 **Purpose:** Wipe all rows in the current month's bugs tab before writing fresh data.
 
-**Sheet target:** Dynamic — `sheetTabBugs` (e.g. `JuneMonthsBugsDetails`)
+**Sheet target:** Dynamic — `sheetTabBugs` (e.g. `Bugs Jun2026`)
 
 **Output → Code: To Bug Rows (M)**
 
@@ -383,7 +383,7 @@ Body: value of sheetBodyBugs from Build Report
 
 **Purpose:** Appends M bug rows to the month's bugs tab.
 
-**Sheet target:** Dynamic — `sheetTabBugs` (e.g. `JuneMonthsBugsDetails`)
+**Sheet target:** Dynamic — `sheetTabBugs` (e.g. `Bugs Jun2026`)
 
 ---
 
@@ -431,14 +431,14 @@ Runs in parallel with Path A and Path B after Build Report. Does not wait for sh
 
 ## Sheet Tab Naming Convention
 
-A new pair of tabs is created automatically each month:
+A new pair of tabs is created automatically each month. Tab names include the month and year so it's immediately clear which period the data covers:
 
 | Month | Tasks Tab | Bugs Tab |
 |---|---|---|
-| March 2026 | `MarchMonthsTasksDetails` | `MarchMonthsBugsDetails` |
-| April 2026 | `AprilMonthsTasksDetails` | `AprilMonthsBugsDetails` |
-| May 2026 | `MayMonthsTasksDetails` | `MayMonthsBugsDetails` |
-| June 2026 | `JuneMonthsTasksDetails` | `JuneMonthsBugsDetails` |
+| March 2026 | `Tasks Mar2026` | `Bugs Mar2026` |
+| April 2026 | `Tasks Apr2026` | `Bugs Apr2026` |
+| May 2026 | `Tasks May2026` | `Bugs May2026` |
+| June 2026 | `Tasks Jun2026` | `Bugs Jun2026` |
 
 ---
 
