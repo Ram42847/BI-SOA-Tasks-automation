@@ -14,11 +14,7 @@ const PROJECT_ID          = 75;
 const YEAR_LOOKBACK_DAYS  = 365;
 const API_BUG_TYPE_ID     = 19;
 const ENV_STAGE_OPTION_ID = '22';
-const OPEN_STATUS_IDS = [
-  39,44,88,36,97,42,37,40,43,46,96,59,60,61,62,63,47,98,
-  93,94,95,64,89,90,91,92,82,48,49,52,50,51,53,65,54,66,
-  67,68,57,69,71,72,73,74,75,76,77,78,79,80,81,1,38,99,100,101
-];
+const TODO_STATUS_ID      = '1';
 
 // Pure-JS Base64 — works even if Buffer is unavailable in this n8n version
 function _b64(str) {
@@ -46,18 +42,18 @@ if (dsSat === 0) dsSat = 7;
 const sat = addDays(today, -dsSat);
 const sun = addDays(sat, -6);
 const ws  = toISO(sun), we = toISO(sat);
-const cutoff = toISO(addDays(sat, -YEAR_LOOKBACK_DAYS));
+const cutoff = toISO(addDays(sun, -YEAR_LOOKBACK_DAYS));  // from weekStart, matching UI
 
-const openIds = OPEN_STATUS_IDS.map(String);
 const bugIds  = [String(API_BUG_TYPE_ID)];
 const proj    = { project:      { operator: '=',   values: [String(PROJECT_ID)] } };
-const open    = { status:       { operator: '=',   values: openIds } };
+const openSt  = { status:       { operator: 'o',   values: [] } };               // Status: open
+const todo    = { status:       { operator: '=',   values: [TODO_STATUS_ID] } }; // Status: is To Do
 const notBug  = { type:         { operator: '!',   values: bugIds } };
 const bug     = { type:         { operator: '=',   values: bugIds } };
 const noStage = { customField9: { operator: '!',   values: [ENV_STAGE_OPTION_ID] } };
-const created = { createdAt:    { operator: '<>d', values: [ws, we] } };
-const yr      = { createdAt:    { operator: '<>d', values: [cutoff, we] } };
-const updated = { updatedAt:    { operator: '<>d', values: [ws, we] } };
+const created = { createdAt:    { operator: '<>d', values: [ws, we] } };  // created this week
+const yr      = { createdAt:    { operator: '<>d', values: [cutoff, we] } }; // created last year
+const updated = { updatedAt:    { operator: '<>d', values: [ws, we] } };  // updated this week
 
 const fj = (...extras) => JSON.stringify([proj, ...extras]);
 
@@ -65,19 +61,19 @@ return [{ json: {
   authHeader,
   weekStart:          ws,
   weekEnd:            we,
-  merpOpenedFilter:   fj(created, open, notBug),
-  merpOpenEndFilter:  fj(yr, open, notBug),
-  bugsOpenedFilter:   fj(created, open, bug, noStage),
-  bugsOpenEndFilter:  fj(yr, open, bug, noStage),
-  devTasksFilter:     fj(open, yr, updated),
-  tasksDetailFilter:  fj(open, yr, notBug, updated),
-  bugsDetailFilter:   fj(open, yr, bug, noStage, updated),
+  merpOpenedFilter:   fj(created, notBug),           // Status=all, created this week, !bug
+  merpOpenEndFilter:  fj(yr, openSt, notBug),        // Status=open, yr lookback, !bug
+  bugsOpenedFilter:   fj(created, bug),              // Status=all, created this week, bug
+  bugsOpenEndFilter:  fj(yr, openSt, bug, noStage),  // Status=open, yr lookback, bug, env!=STAGE
+  devTasksFilter:     fj(yr, updated),               // Status=all, yr lookback, updated this week
+  todoFilter:         fj(yr, todo, notBug),          // Status=is To Do, yr lookback, !bug
+  tasksDetailFilter:  fj(yr, updated, notBug),       // Status=all, yr lookback, updated this week, !bug
+  bugsDetailFilter:   fj(yr, updated, bug),          // Status=all, yr lookback, updated this week, bug
 }}];
 """
 
 # ── Code: Build Report ────────────────────────────────────────────────────────
-JS_BUILD = r"""const BACKLOG_STATUS_IDS = new Set([1]);
-const API_STORY_TYPE_ID  = 15;
+JS_BUILD = r"""const API_STORY_TYPE_ID  = 15;
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q';
 
 function linkId(links, key) {
@@ -103,12 +99,13 @@ const merpOpenEndEls = getEls('HTTP: Merp Open End');
 const bugsOpenedEls  = getEls('HTTP: Bugs Opened');
 const bugsOpenEndEls = getEls('HTTP: Bugs Open End');
 const devTasksEls    = getEls('HTTP: Dev Tasks');
+const todoEls        = getEls('HTTP: Todo Tasks');
 const tasksDetailEls = getEls('HTTP: Tasks Detail');
 const bugsDetailEls  = getEls('HTTP: Bugs Detail');
 
 const merpB       = merpOpenedEls.length;
 const merpOpenEnd = merpOpenEndEls.length;
-const merpBacklog = merpOpenEndEls.filter(w => BACKLOG_STATUS_IDS.has(linkId(w._links,'status'))).length;
+const merpBacklog = todoEls.length;
 const merpWip     = merpOpenEnd - merpBacklog;
 const bugsB       = bugsOpenedEls.length;
 const bugsOpenEnd = bugsOpenEndEls.length;
@@ -275,13 +272,17 @@ return [{ json: { html, subject, tasksRows, bugsRows } }];
 # ── Code: To Task Rows ────────────────────────────────────────────────────────
 # runOnceForAllItems — ignores its input, reads Build Report's tasksRows, outputs N items
 JS_TO_TASK_ROWS = r"""const d = $('Code: Build Report').first().json;
-return (d.tasksRows || []).map(r => ({ json: r }));
+const rows = d.tasksRows || [];
+if (rows.length === 0) return [{ json: { _noop: true } }];
+return rows.map(r => ({ json: r }));
 """
 
 # ── Code: To Bug Rows ─────────────────────────────────────────────────────────
 # runOnceForAllItems — ignores N items from Append Tasks, outputs M bug items
 JS_TO_BUG_ROWS = r"""const d = $('Code: Build Report').first().json;
-return (d.bugsRows || []).map(r => ({ json: r }));
+const rows = d.bugsRows || [];
+if (rows.length === 0) return [{ json: { _noop: true } }];
+return rows.map(r => ({ json: r }));
 """
 
 # ── Code: Restore Email ───────────────────────────────────────────────────────
@@ -406,23 +407,23 @@ setup    = {"id":IDS['setup'],    "name":"Code: Setup",
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_SETUP}}
 build    = {"id":IDS['build'],    "name":"Code: Build Report",
             "type":"n8n-nodes-base.code", "typeVersion":2,
-            "position":[2080,290],
+            "position":[2280,290],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_BUILD}}
 to_tasks = {"id":IDS['toTaskRows'],"name":"Code: To Task Rows",
             "type":"n8n-nodes-base.code", "typeVersion":2,
-            "position":[3080,290],
+            "position":[3280,290],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_TO_TASK_ROWS}}
 to_bugs  = {"id":IDS['toBugRows'], "name":"Code: To Bug Rows",
             "type":"n8n-nodes-base.code", "typeVersion":2,
-            "position":[3480,290],
+            "position":[3680,290],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_TO_BUG_ROWS}}
 restore  = {"id":IDS['restore'],  "name":"Code: Restore Email",
             "type":"n8n-nodes-base.code", "typeVersion":2,
-            "position":[3880,290],
+            "position":[4080,290],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_RESTORE}}
 gmail    = {"id":IDS['gmail'],    "name":"Send Email via Gmail",
             "type":"n8n-nodes-base.gmail", "typeVersion":2.1,
-            "position":[4080,290],
+            "position":[4280,290],
             "parameters":{
                 "sendTo":    "bireports@indiamart.com",
                 "subject":   "={{ $json.subject }}",
@@ -437,20 +438,21 @@ http_nodes = [
     http_node("HTTP: Bugs Opened",   "bugsOpenedFilter",  [1080, 290]),
     http_node("HTTP: Bugs Open End", "bugsOpenEndFilter", [1280, 290]),
     http_node("HTTP: Dev Tasks",     "devTasksFilter",    [1480, 290]),
-    http_node("HTTP: Tasks Detail",  "tasksDetailFilter", [1680, 290]),
-    http_node("HTTP: Bugs Detail",   "bugsDetailFilter",  [1880, 290]),
+    http_node("HTTP: Todo Tasks",    "todoFilter",        [1680, 290]),
+    http_node("HTTP: Tasks Detail",  "tasksDetailFilter", [1880, 290]),
+    http_node("HTTP: Bugs Detail",   "bugsDetailFilter",  [2080, 290]),
 ]
 
 create_nodes = [
-    http_create_tab_static("HTTP: Create Tasks Tab", "TasksDetails", [2280, 290]),
-    http_create_tab_static("HTTP: Create Bugs Tab",  "BugsDetails",  [2480, 290]),
+    http_create_tab_static("HTTP: Create Tasks Tab", "TasksDetails", [2480, 290]),
+    http_create_tab_static("HTTP: Create Bugs Tab",  "BugsDetails",  [2680, 290]),
 ]
 
 gsheet_nodes = [
-    gsheets_node("GSheets: Clear Tasks",  "clear",  "TasksDetails", [2680, 290], continue_on_fail=True),
-    gsheets_node("GSheets: Clear Bugs",   "clear",  "BugsDetails",  [2880, 290], continue_on_fail=True),
-    gsheets_node("GSheets: Append Tasks", "append", "TasksDetails", [3280, 290]),
-    gsheets_node("GSheets: Append Bugs",  "append", "BugsDetails",  [3680, 290]),
+    gsheets_node("GSheets: Clear Tasks",  "clear",  "TasksDetails", [2880, 290], continue_on_fail=True),
+    gsheets_node("GSheets: Clear Bugs",   "clear",  "BugsDetails",  [3080, 290], continue_on_fail=True),
+    gsheets_node("GSheets: Append Tasks", "append", "TasksDetails", [3480, 290], continue_on_fail=True),
+    gsheets_node("GSheets: Append Bugs",  "append", "BugsDetails",  [3880, 290], continue_on_fail=True),
 ]
 
 all_nodes = (

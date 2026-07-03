@@ -14,11 +14,7 @@ const PROJECT_ID          = 75;
 const YEAR_LOOKBACK_DAYS  = 365;
 const API_BUG_TYPE_ID     = 19;
 const ENV_STAGE_OPTION_ID = '22';
-const OPEN_STATUS_IDS = [
-  39,44,88,36,97,42,37,40,43,46,96,59,60,61,62,63,47,98,
-  93,94,95,64,89,90,91,92,82,48,49,52,50,51,53,65,54,66,
-  67,68,57,69,71,72,73,74,75,76,77,78,79,80,81,1,38,99,100,101
-];
+const TODO_STATUS_ID      = '1';
 
 function _b64(str) {
   if (typeof Buffer !== 'undefined') return Buffer.from(str).toString('base64');
@@ -43,18 +39,18 @@ const today = new Date(); today.setHours(0,0,0,0);
 const ms = new Date(today.getFullYear(), today.getMonth()-1, 1);
 const me = new Date(today.getFullYear(), today.getMonth(), 0);
 const ms_iso = toISO(ms), me_iso = toISO(me);
-const cutoff  = toISO(addDays(me, -YEAR_LOOKBACK_DAYS));
+const cutoff  = toISO(addDays(ms, -YEAR_LOOKBACK_DAYS));  // from monthStart, matching UI
 
-const openIds = OPEN_STATUS_IDS.map(String);
 const bugIds  = [String(API_BUG_TYPE_ID)];
 const proj    = { project:      { operator: '=',   values: [String(PROJECT_ID)] } };
-const open    = { status:       { operator: '=',   values: openIds } };
+const openSt  = { status:       { operator: 'o',   values: [] } };               // Status: open
+const todo    = { status:       { operator: '=',   values: [TODO_STATUS_ID] } }; // Status: is To Do
 const notBug  = { type:         { operator: '!',   values: bugIds } };
 const bug     = { type:         { operator: '=',   values: bugIds } };
 const noStage = { customField9: { operator: '!',   values: [ENV_STAGE_OPTION_ID] } };
-const yr      = { createdAt:    { operator: '<>d', values: [cutoff, me_iso] } };
-const created_month = { createdAt: { operator: '<>d', values: [ms_iso, me_iso] } };
-const updated_month = { updatedAt: { operator: '<>d', values: [ms_iso, me_iso] } };
+const yr            = { createdAt: { operator: '<>d', values: [cutoff, me_iso] } };   // created last year
+const created_month = { createdAt: { operator: '<>d', values: [ms_iso, me_iso] } };   // created this month
+const updated_month = { updatedAt: { operator: '<>d', values: [ms_iso, me_iso] } };   // updated this month
 
 const fj = (...extras) => JSON.stringify([proj, ...extras]);
 
@@ -62,18 +58,18 @@ return [{ json: {
   authHeader,
   monthStart:         ms_iso,
   monthEnd:           me_iso,
-  merpOpenedFilter:   fj(created_month, open, notBug),
-  merpOpenEndFilter:  fj(yr, open, notBug),
-  bugsOpenedFilter:   fj(created_month, open, bug, noStage),
-  bugsOpenEndFilter:  fj(yr, open, bug, noStage),
-  tasksDetailFilter:  fj(yr, open, notBug, updated_month),
-  bugsDetailFilter:   fj(yr, open, bug, noStage, updated_month),
+  merpOpenedFilter:   fj(created_month, notBug),           // Status=all, created this month, !bug
+  merpOpenEndFilter:  fj(yr, openSt, notBug),              // Status=open, yr lookback, !bug
+  bugsOpenedFilter:   fj(created_month, bug, noStage),     // Status=all, created this month, bug, env!=STAGE
+  bugsOpenEndFilter:  fj(yr, openSt, bug, noStage),        // Status=open, yr lookback, bug, env!=STAGE
+  todoFilter:         fj(yr, todo, notBug),                // Status=is To Do, yr lookback, !bug
+  tasksDetailFilter:  fj(yr, updated_month, notBug),       // Status=all, yr lookback, updated this month, !bug
+  bugsDetailFilter:   fj(yr, updated_month, bug, noStage), // Status=all, yr lookback, updated this month, bug, env!=STAGE
 }}];
 """
 
 # ── Code: Build Report Monthly ────────────────────────────────────────────────
-JS_BUILD = r"""const BACKLOG_STATUS_IDS = new Set([1]);
-const API_STORY_TYPE_ID  = 15;
+JS_BUILD = r"""const API_STORY_TYPE_ID  = 15;
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q';
 
 function linkId(links, key) {
@@ -93,12 +89,13 @@ const merpOpenedEls  = getEls('HTTP: Merp Opened');
 const merpOpenEndEls = getEls('HTTP: Merp Open End');
 const bugsOpenedEls  = getEls('HTTP: Bugs Opened');
 const bugsOpenEndEls = getEls('HTTP: Bugs Open End');
+const todoEls        = getEls('HTTP: Todo Tasks (M)');
 const tasksDetailEls = getEls('HTTP: Tasks Detail');
 const bugsDetailEls  = getEls('HTTP: Bugs Detail');
 
 const merpB       = merpOpenedEls.length;
 const merpOpenEnd = merpOpenEndEls.length;
-const merpBacklog = merpOpenEndEls.filter(w => BACKLOG_STATUS_IDS.has(linkId(w._links,'status'))).length;
+const merpBacklog = todoEls.length;
 const merpWip     = merpOpenEnd - merpBacklog;
 const bugsB       = bugsOpenedEls.length;
 const bugsOpenEnd = bugsOpenEndEls.length;
@@ -238,23 +235,29 @@ const monthYear   = cur.end.getFullYear();
 const period      = `${pad(currMs.getDate())} ${ML[currMs.getMonth()]} to ${pad(cur.end.getDate())} ${ML[cur.end.getMonth()]} ${monthYear}`;
 const sheetTabTasks = `${monthName}MonthsTasksDetails`;
 const sheetTabBugs  = `${monthName}MonthsBugsDetails`;
+const sheetBodyTasks = JSON.stringify({requests:[{addSheet:{properties:{title:sheetTabTasks}}}]});
+const sheetBodyBugs  = JSON.stringify({requests:[{addSheet:{properties:{title:sheetTabBugs}}}]});
 const tasksRows = extractSheetRows(tasksDetailEls, monthLabel);
 const bugsRows  = extractSheetRows(bugsDetailEls,  monthLabel);
 
 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:Arial,sans-serif;font-size:13px;color:#222;max-width:900px"><p>Hi All,</p><p>Please find the Monthly Task Report of BI-SOA from <strong>${period}</strong>.</p><p><strong><u>Key Highlights :</u></strong></p>${hl}${sumT}<p style="margin-top:20px">Please find below the bifurcation of total tickets opened :-</p>${bifT}<br><p>Please refer below for a detailed tracker.<br><a href="${SHEET_URL}">BI-SOA Detailed Tracker</a></p><br><p><em>Thanks &amp; Regards,<br>BI SOA Automation<br>IndiaMart Intermesh Limited</em></p></body></html>`;
 const subject=`BI Monthly Report :BI SOA Task Status Report : ${ML[currMs.getMonth()]} ${monthYear}`;
 
-return [{ json: { html, subject, tasksRows, bugsRows, sheetTabTasks, sheetTabBugs } }];
+return [{ json: { html, subject, tasksRows, bugsRows, sheetTabTasks, sheetTabBugs, sheetBodyTasks, sheetBodyBugs } }];
 """
 
 # ── Code: To Task Rows ────────────────────────────────────────────────────────
 JS_TO_TASK_ROWS = r"""const d = $('Code: Build Report Monthly').first().json;
-return (d.tasksRows || []).map(r => ({ json: r }));
+const rows = d.tasksRows || [];
+if (rows.length === 0) return [{ json: { _noop: true } }];
+return rows.map(r => ({ json: r }));
 """
 
 # ── Code: To Bug Rows ─────────────────────────────────────────────────────────
 JS_TO_BUG_ROWS = r"""const d = $('Code: Build Report Monthly').first().json;
-return (d.bugsRows || []).map(r => ({ json: r }));
+const rows = d.bugsRows || [];
+if (rows.length === 0) return [{ json: { _noop: true } }];
+return rows.map(r => ({ json: r }));
 """
 
 # ── Code: Restore Email ───────────────────────────────────────────────────────
@@ -289,12 +292,8 @@ def http_op_node(name, filter_field, pos):
 
 # ── Helper: Google Sheets API node to create a new sheet tab ─────────────────
 # Uses HTTP Request with Google OAuth to call Sheets batchUpdate
-def http_create_tab(name, tab_field, pos):
-    body_expr = (
-        "={{ JSON.stringify({requests:[{addSheet:{properties:{title:"
-        f"$('Code: Build Report Monthly').first().json.{tab_field}"
-        "}}}]}) }}"
-    )
+def http_create_tab(name, body_field, pos):
+    body_expr = f"={{{{ $('Code: Build Report Monthly').first().json.{body_field} }}}}"
     return {
         "id": str(uuid.uuid4()), "name": name,
         "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.1,
@@ -376,23 +375,23 @@ setup    = {"id":IDS['setup'],    "name":"Code: Setup Monthly",
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_SETUP}}
 build    = {"id":IDS['build'],    "name":"Code: Build Report Monthly",
             "type":"n8n-nodes-base.code", "typeVersion":2,
-            "position":[1980,290],
+            "position":[2080,290],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_BUILD}}
 to_tasks = {"id":IDS['toTaskRows'],"name":"Code: To Task Rows (M)",
             "type":"n8n-nodes-base.code", "typeVersion":2,
-            "position":[2680,290],
+            "position":[2880,290],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_TO_TASK_ROWS}}
 to_bugs  = {"id":IDS['toBugRows'], "name":"Code: To Bug Rows (M)",
             "type":"n8n-nodes-base.code", "typeVersion":2,
-            "position":[3080,290],
+            "position":[3280,290],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_TO_BUG_ROWS}}
 restore  = {"id":IDS['restore'],  "name":"Code: Restore Email (M)",
             "type":"n8n-nodes-base.code", "typeVersion":2,
-            "position":[3480,290],
+            "position":[3680,290],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_RESTORE}}
 gmail    = {"id":IDS['gmail'],    "name":"Send Email via Gmail",
             "type":"n8n-nodes-base.gmail", "typeVersion":2.1,
-            "position":[3680,290],
+            "position":[3880,290],
             "parameters":{
                 "sendTo":    "bireports@indiamart.com",
                 "subject":   "={{ $json.subject }}",
@@ -402,21 +401,22 @@ gmail    = {"id":IDS['gmail'],    "name":"Send Email via Gmail",
             }}
 
 http_op_nodes = [
-    http_op_node("HTTP: Merp Opened",   "merpOpenedFilter",  [ 680, 290]),
-    http_op_node("HTTP: Merp Open End", "merpOpenEndFilter", [ 880, 290]),
-    http_op_node("HTTP: Bugs Opened",   "bugsOpenedFilter",  [1080, 290]),
-    http_op_node("HTTP: Bugs Open End", "bugsOpenEndFilter", [1280, 290]),
-    http_op_node("HTTP: Tasks Detail",  "tasksDetailFilter", [1480, 290]),
-    http_op_node("HTTP: Bugs Detail",   "bugsDetailFilter",  [1780, 290]),
+    http_op_node("HTTP: Merp Opened",    "merpOpenedFilter",  [ 680, 290]),
+    http_op_node("HTTP: Merp Open End",  "merpOpenEndFilter", [ 880, 290]),
+    http_op_node("HTTP: Bugs Opened",    "bugsOpenedFilter",  [1080, 290]),
+    http_op_node("HTTP: Bugs Open End",  "bugsOpenEndFilter", [1280, 290]),
+    http_op_node("HTTP: Todo Tasks (M)", "todoFilter",        [1480, 290]),
+    http_op_node("HTTP: Tasks Detail",   "tasksDetailFilter", [1680, 290]),
+    http_op_node("HTTP: Bugs Detail",    "bugsDetailFilter",  [1880, 290]),
 ]
 
-create_tasks = http_create_tab("HTTP: Create Tasks Tab", "sheetTabTasks", [2180, 290])
-create_bugs  = http_create_tab("HTTP: Create Bugs Tab",  "sheetTabBugs",  [2380, 290])
+create_tasks = http_create_tab("HTTP: Create Tasks Tab", "sheetBodyTasks", [2280, 290])
+create_bugs  = http_create_tab("HTTP: Create Bugs Tab",  "sheetBodyBugs",  [2480, 290])
 
-clear_tasks  = gsheets_dynamic("GSheets: Clear Tasks (M)",  "clear",  "sheetTabTasks", [2480, 290], True)
-clear_bugs   = gsheets_dynamic("GSheets: Clear Bugs (M)",   "clear",  "sheetTabBugs",  [2580, 290], True)
-append_tasks = gsheets_dynamic("GSheets: Append Tasks (M)", "append", "sheetTabTasks", [2880, 290])
-append_bugs  = gsheets_dynamic("GSheets: Append Bugs (M)",  "append", "sheetTabBugs",  [3280, 290])
+clear_tasks  = gsheets_dynamic("GSheets: Clear Tasks (M)",  "clear",  "sheetTabTasks", [2680, 290], True)
+clear_bugs   = gsheets_dynamic("GSheets: Clear Bugs (M)",   "clear",  "sheetTabBugs",  [2880, 290], True)
+append_tasks = gsheets_dynamic("GSheets: Append Tasks (M)", "append", "sheetTabTasks", [3080, 290], continue_on_fail=True)
+append_bugs  = gsheets_dynamic("GSheets: Append Bugs (M)",  "append", "sheetTabBugs",  [3480, 290], continue_on_fail=True)
 
 all_nodes = (
     [manual, schedule, setup]
