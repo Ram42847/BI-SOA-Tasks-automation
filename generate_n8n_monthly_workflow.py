@@ -347,51 +347,62 @@ def gsheets_dynamic(name, operation, tab_field, pos, continue_on_fail=False):
     return node
 
 # ── Build workflow ────────────────────────────────────────────────────────────
-# Chain:
-#  Triggers → Setup Monthly → [6 HTTP: OP nodes] → Build Report Monthly
-#    → HTTP: Create Tasks Tab (continueOnFail)
-#    → HTTP: Create Bugs Tab (continueOnFail)
-#    → GSheets: Clear Tasks (continueOnFail, dynamic)
-#    → GSheets: Clear Bugs (continueOnFail, dynamic)
-#    → Code: To Task Rows → GSheets: Append Tasks (dynamic)
-#    → Code: To Bug Rows  → GSheets: Append Bugs  (dynamic)
-#    → Code: Restore Email → Gmail
+# Parallel architecture:
+#
+#   Triggers → Setup Monthly → [7 HTTP nodes in parallel] → Merge → Build Report Monthly
+#                                                                          ↓
+#                              ┌────────────────────────────────────────────┼──────────────────────────┐
+#                         Tasks path                                   Bugs path                Email path
+#                 CreateTab→Clear→ToRows→Append               CreateTab→Clear→ToRows→Append   Restore→Gmail
 
 IDS = {k: str(uuid.uuid4()) for k in
-       ['manual','schedule','setup','build','toTaskRows','toBugRows','restore','gmail','wf']}
+       ['manual','schedule','setup','merge','build','toTaskRows','toBugRows','restore','gmail','wf']}
+
+# 7 HTTP nodes spread vertically (Y: 50..1070, step 170, centre = 560)
+HTTP_Y = [50 + i * 170 for i in range(7)]
+CENTER_Y = (HTTP_Y[0] + HTTP_Y[-1]) // 2   # 560
+
+# Y levels for the 3 post-build paths
+TA_Y = 100          # Tasks path
+BU_Y = CENTER_Y     # Bugs path
+EM_Y = CENTER_Y + 460  # Email path
 
 manual   = {"id":IDS['manual'],   "name":"Manual Trigger",
             "type":"n8n-nodes-base.manualTrigger", "typeVersion":1,
-            "position":[200,200], "parameters":{}}
+            "position":[200, CENTER_Y - 80], "parameters":{}}
 schedule = {"id":IDS['schedule'], "name":"Schedule Trigger",
             "type":"n8n-nodes-base.scheduleTrigger", "typeVersion":1.2,
-            "position":[200,380],
+            "position":[200, CENTER_Y + 80],
             "parameters":{"rule":{"interval":[
-                {"field":"cronExpression","expression":"0 20 1 * *"}  # 1st of each month
+                {"field":"cronExpression","expression":"0 20 1 * *"}
             ]}}}
 setup    = {"id":IDS['setup'],    "name":"Code: Setup Monthly",
             "type":"n8n-nodes-base.code", "typeVersion":2,
-            "position":[440,290],
+            "position":[440, CENTER_Y],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_SETUP}}
+merge    = {"id":IDS['merge'],    "name":"Merge",
+            "type":"n8n-nodes-base.merge", "typeVersion":3,
+            "position":[1100, CENTER_Y],
+            "parameters":{"mode":"append","options":{}}}
 build    = {"id":IDS['build'],    "name":"Code: Build Report Monthly",
             "type":"n8n-nodes-base.code", "typeVersion":2,
-            "position":[2080,290],
+            "position":[1380, CENTER_Y],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_BUILD}}
 to_tasks = {"id":IDS['toTaskRows'],"name":"Code: To Task Rows (M)",
             "type":"n8n-nodes-base.code", "typeVersion":2,
-            "position":[2880,290],
+            "position":[2180, TA_Y],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_TO_TASK_ROWS}}
 to_bugs  = {"id":IDS['toBugRows'], "name":"Code: To Bug Rows (M)",
             "type":"n8n-nodes-base.code", "typeVersion":2,
-            "position":[3280,290],
+            "position":[2180, BU_Y],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_TO_BUG_ROWS}}
 restore  = {"id":IDS['restore'],  "name":"Code: Restore Email (M)",
             "type":"n8n-nodes-base.code", "typeVersion":2,
-            "position":[3680,290],
+            "position":[1660, EM_Y],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_RESTORE}}
 gmail    = {"id":IDS['gmail'],    "name":"Send Email via Gmail",
             "type":"n8n-nodes-base.gmail", "typeVersion":2.1,
-            "position":[3880,290],
+            "position":[1940, EM_Y],
             "parameters":{
                 "sendTo":    "bireports@indiamart.com",
                 "subject":   "={{ $json.subject }}",
@@ -400,51 +411,66 @@ gmail    = {"id":IDS['gmail'],    "name":"Send Email via Gmail",
                 "options":   {"ccList":"puneet.agarwal@indiamart.com,vipul.bansal1@indiamart.com"}
             }}
 
+# 7 HTTP nodes — all independent, run in parallel after Setup
 http_op_nodes = [
-    http_op_node("HTTP: Merp Opened",    "merpOpenedFilter",  [ 680, 290]),
-    http_op_node("HTTP: Merp Open End",  "merpOpenEndFilter", [ 880, 290]),
-    http_op_node("HTTP: Bugs Opened",    "bugsOpenedFilter",  [1080, 290]),
-    http_op_node("HTTP: Bugs Open End",  "bugsOpenEndFilter", [1280, 290]),
-    http_op_node("HTTP: Todo Tasks (M)", "todoFilter",        [1480, 290]),
-    http_op_node("HTTP: Tasks Detail",   "tasksDetailFilter", [1680, 290]),
-    http_op_node("HTTP: Bugs Detail",    "bugsDetailFilter",  [1880, 290]),
+    http_op_node("HTTP: Merp Opened",    "merpOpenedFilter",  [900, HTTP_Y[0]]),
+    http_op_node("HTTP: Merp Open End",  "merpOpenEndFilter", [900, HTTP_Y[1]]),
+    http_op_node("HTTP: Bugs Opened",    "bugsOpenedFilter",  [900, HTTP_Y[2]]),
+    http_op_node("HTTP: Bugs Open End",  "bugsOpenEndFilter", [900, HTTP_Y[3]]),
+    http_op_node("HTTP: Todo Tasks (M)", "todoFilter",        [900, HTTP_Y[4]]),
+    http_op_node("HTTP: Tasks Detail",   "tasksDetailFilter", [900, HTTP_Y[5]]),
+    http_op_node("HTTP: Bugs Detail",    "bugsDetailFilter",  [900, HTTP_Y[6]]),
 ]
 
-create_tasks = http_create_tab("HTTP: Create Tasks Tab", "sheetBodyTasks", [2280, 290])
-create_bugs  = http_create_tab("HTTP: Create Bugs Tab",  "sheetBodyBugs",  [2480, 290])
+# Tasks path (parallel stream A)
+create_tasks = http_create_tab("HTTP: Create Tasks Tab", "sheetBodyTasks", [1660, TA_Y])
+clear_tasks  = gsheets_dynamic("GSheets: Clear Tasks (M)",  "clear",  "sheetTabTasks", [1940, TA_Y], True)
+append_tasks = gsheets_dynamic("GSheets: Append Tasks (M)", "append", "sheetTabTasks", [2460, TA_Y], continue_on_fail=True)
 
-clear_tasks  = gsheets_dynamic("GSheets: Clear Tasks (M)",  "clear",  "sheetTabTasks", [2680, 290], True)
-clear_bugs   = gsheets_dynamic("GSheets: Clear Bugs (M)",   "clear",  "sheetTabBugs",  [2880, 290], True)
-append_tasks = gsheets_dynamic("GSheets: Append Tasks (M)", "append", "sheetTabTasks", [3080, 290], continue_on_fail=True)
-append_bugs  = gsheets_dynamic("GSheets: Append Bugs (M)",  "append", "sheetTabBugs",  [3480, 290], continue_on_fail=True)
+# Bugs path (parallel stream B)
+create_bugs  = http_create_tab("HTTP: Create Bugs Tab",  "sheetBodyBugs",  [1660, BU_Y])
+clear_bugs   = gsheets_dynamic("GSheets: Clear Bugs (M)",   "clear",  "sheetTabBugs",  [1940, BU_Y], True)
+append_bugs  = gsheets_dynamic("GSheets: Append Bugs (M)",  "append", "sheetTabBugs",  [2460, BU_Y], continue_on_fail=True)
 
 all_nodes = (
     [manual, schedule, setup]
     + http_op_nodes
-    + [build, create_tasks, create_bugs, clear_tasks, clear_bugs,
-       to_tasks, append_tasks,
-       to_bugs,  append_bugs,
+    + [merge, build,
+       create_tasks, clear_tasks, to_tasks, append_tasks,
+       create_bugs,  clear_bugs,  to_bugs,  append_bugs,
        restore, gmail]
 )
 
-http_op_names = [n["name"] for n in http_op_nodes]
-chain = (
-    ["Code: Setup Monthly"]
-    + http_op_names
-    + ["Code: Build Report Monthly",
-       "HTTP: Create Tasks Tab", "HTTP: Create Bugs Tab",
-       "GSheets: Clear Tasks (M)", "GSheets: Clear Bugs (M)",
-       "Code: To Task Rows (M)",   "GSheets: Append Tasks (M)",
-       "Code: To Bug Rows (M)",    "GSheets: Append Bugs (M)",
-       "Code: Restore Email (M)",  "Send Email via Gmail"]
-)
-
+# ── Connections (parallel) ────────────────────────────────────────────────────
 conns = {
     "Manual Trigger":   {"main": [[{"node":"Code: Setup Monthly","type":"main","index":0}]]},
     "Schedule Trigger": {"main": [[{"node":"Code: Setup Monthly","type":"main","index":0}]]},
+    # Setup → all 7 HTTP nodes in parallel
+    "Code: Setup Monthly": {"main": [[
+        {"node": n["name"], "type": "main", "index": 0} for n in http_op_nodes
+    ]]},
+    # Build Report → 3 independent parallel paths
+    "Code: Build Report Monthly": {"main": [[
+        {"node": "HTTP: Create Tasks Tab",  "type": "main", "index": 0},
+        {"node": "HTTP: Create Bugs Tab",   "type": "main", "index": 0},
+        {"node": "Code: Restore Email (M)", "type": "main", "index": 0},
+    ]]},
+    # Tasks path
+    "HTTP: Create Tasks Tab":  {"main": [[{"node":"GSheets: Clear Tasks (M)", "type":"main","index":0}]]},
+    "GSheets: Clear Tasks (M)":{"main": [[{"node":"Code: To Task Rows (M)",   "type":"main","index":0}]]},
+    "Code: To Task Rows (M)":  {"main": [[{"node":"GSheets: Append Tasks (M)","type":"main","index":0}]]},
+    # Bugs path
+    "HTTP: Create Bugs Tab":  {"main": [[{"node":"GSheets: Clear Bugs (M)", "type":"main","index":0}]]},
+    "GSheets: Clear Bugs (M)":{"main": [[{"node":"Code: To Bug Rows (M)",   "type":"main","index":0}]]},
+    "Code: To Bug Rows (M)":  {"main": [[{"node":"GSheets: Append Bugs (M)","type":"main","index":0}]]},
+    # Email path
+    "Code: Restore Email (M)": {"main": [[{"node":"Send Email via Gmail","type":"main","index":0}]]},
+    # Merge → Build
+    "Merge": {"main": [[{"node":"Code: Build Report Monthly","type":"main","index":0}]]},
 }
-for i, src in enumerate(chain[:-1]):
-    conns[src] = {"main": [[{"node": chain[i+1], "type":"main","index":0}]]}
+# Each HTTP node → Merge at its own input index (Merge waits for all before firing)
+for i, n in enumerate(http_op_nodes):
+    conns[n["name"]] = {"main": [[{"node":"Merge","type":"main","index":i}]]}
 
 workflow = {
     "name": "SOA Monthly Report",

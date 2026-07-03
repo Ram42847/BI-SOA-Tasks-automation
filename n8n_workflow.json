@@ -1,30 +1,30 @@
 {
   "name": "SOA Weekly Report",
-  "id": "f93c433c-fc2f-471e-b287-ecd8df4970ee",
+  "id": "ad7a6e4f-40f4-49c6-9a08-8946bbf6f5d4",
   "active": false,
   "settings": {
     "executionOrder": "v1"
   },
   "nodes": [
     {
-      "id": "bdfa067d-520e-4447-91c8-e2e1374f0f40",
+      "id": "6dd7dc9e-5d4b-491d-b1b2-70f616c4acf3",
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
         200,
-        200
+        565
       ],
       "parameters": {}
     },
     {
-      "id": "5f1cf555-b7e8-4805-a508-c405ce23b777",
+      "id": "ed0320db-8180-4bdf-ac79-b05b33ae9140",
       "name": "Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
         200,
-        380
+        725
       ],
       "parameters": {
         "rule": {
@@ -38,13 +38,13 @@
       }
     },
     {
-      "id": "4f79be0d-bd75-44f8-b084-a3da421700db",
+      "id": "ce2ba3ca-2b46-4435-a626-3a990cfe2566",
       "name": "Code: Setup",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         440,
-        290
+        645
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
@@ -52,13 +52,13 @@
       }
     },
     {
-      "id": "07d36032-a7ea-459d-a0c6-9e356f84b26f",
+      "id": "c440e038-6815-44bb-8785-fcca3752f0f0",
       "name": "HTTP: Merp Opened",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        680,
-        290
+        900,
+        50
       ],
       "parameters": {
         "method": "GET",
@@ -94,13 +94,13 @@
       }
     },
     {
-      "id": "f4f4c7d6-eedd-45b6-9da9-88b189857173",
+      "id": "cfe89060-a80b-463b-891b-057e9c59742e",
       "name": "HTTP: Merp Open End",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        880,
-        290
+        900,
+        220
       ],
       "parameters": {
         "method": "GET",
@@ -136,13 +136,13 @@
       }
     },
     {
-      "id": "59c1c6b9-cc80-47cb-b685-6eda00c01101",
+      "id": "fecbb035-f82f-4f0e-b2dd-7b0a8e9d1d39",
       "name": "HTTP: Bugs Opened",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1080,
-        290
+        900,
+        390
       ],
       "parameters": {
         "method": "GET",
@@ -178,13 +178,13 @@
       }
     },
     {
-      "id": "d1e91639-233a-435d-b6aa-a599b65fb1a2",
+      "id": "414f2176-f84a-407c-b5fd-81b8d56b71bd",
       "name": "HTTP: Bugs Open End",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1280,
-        290
+        900,
+        560
       ],
       "parameters": {
         "method": "GET",
@@ -220,13 +220,13 @@
       }
     },
     {
-      "id": "78094009-b2e9-4869-b41e-f8687a90271b",
+      "id": "ed7bb20a-27f0-4e9d-8619-aea75b2c7842",
       "name": "HTTP: Dev Tasks",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1480,
-        290
+        900,
+        730
       ],
       "parameters": {
         "method": "GET",
@@ -262,13 +262,13 @@
       }
     },
     {
-      "id": "5f6f4f1a-d113-480b-8757-23044ef7aa5b",
+      "id": "95e1effb-11b9-40a0-943e-04509a4995c0",
       "name": "HTTP: Todo Tasks",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1680,
-        290
+        900,
+        900
       ],
       "parameters": {
         "method": "GET",
@@ -304,13 +304,13 @@
       }
     },
     {
-      "id": "f467a9e8-77fb-4a0c-98e3-48ebf97e2d4f",
+      "id": "9f5c3c56-cd7a-4f7e-8eba-a1ce0d68ff48",
       "name": "HTTP: Tasks Detail",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1880,
-        290
+        900,
+        1070
       ],
       "parameters": {
         "method": "GET",
@@ -346,13 +346,13 @@
       }
     },
     {
-      "id": "94b786ff-a58b-42e1-9f95-a0bfcb230925",
+      "id": "4b9d5232-cedf-4b33-86d3-dc8f14d59c0e",
       "name": "HTTP: Bugs Detail",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        2080,
-        290
+        900,
+        1240
       ],
       "parameters": {
         "method": "GET",
@@ -388,13 +388,27 @@
       }
     },
     {
-      "id": "339148e0-ec73-4fd3-bc4a-7826cd3e9e04",
+      "id": "1a19c8e2-efc1-45bf-b0f7-01776cfcd6fc",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1180,
+        645
+      ],
+      "parameters": {
+        "mode": "append",
+        "options": {}
+      }
+    },
+    {
+      "id": "62c27595-a7ff-4566-be6f-a5d2f1b96965",
       "name": "Code: Build Report",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2280,
-        290
+        1460,
+        645
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
@@ -402,14 +416,14 @@
       }
     },
     {
-      "id": "27eec3d3-ec5d-4d6a-a0d9-424d9f5b6574",
+      "id": "2e0c7356-53ae-4b79-b226-3531a4306183",
       "name": "HTTP: Create Tasks Tab",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "continueOnFail": true,
       "position": [
-        2480,
-        290
+        1740,
+        100
       ],
       "parameters": {
         "method": "POST",
@@ -430,14 +444,95 @@
       }
     },
     {
-      "id": "fdca97bb-f877-4d0d-a26d-2796cbef198f",
+      "id": "7451fd49-8955-4cd1-9bfb-93306f4d3b8f",
+      "name": "GSheets: Clear Tasks",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        2020,
+        100
+      ],
+      "parameters": {
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "value": "1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "TasksDetails",
+          "mode": "name"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "f4c3b4f5-dc46-46b5-89da-7b1243b22091",
+      "name": "Code: To Task Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2280,
+        100
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Code: Build Report').first().json;\nconst rows = d.tasksRows || [];\nif (rows.length === 0) return [{ json: { _noop: true } }];\nreturn rows.map(r => ({ json: r }));\n"
+      }
+    },
+    {
+      "id": "c0254ec1-83bd-435e-974f-fe89bd1c9349",
+      "name": "GSheets: Append Tasks",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        2560,
+        100
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "TasksDetails",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "3464d786-08a4-46ed-a373-e6a26ffcbac3",
       "name": "HTTP: Create Bugs Tab",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "continueOnFail": true,
       "position": [
-        2680,
-        290
+        1740,
+        645
       ],
       "parameters": {
         "method": "POST",
@@ -458,43 +553,13 @@
       }
     },
     {
-      "id": "442b071a-ddef-43a6-896c-4e017f21cb1b",
-      "name": "GSheets: Clear Tasks",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.4,
-      "position": [
-        2880,
-        290
-      ],
-      "parameters": {
-        "operation": "clear",
-        "documentId": {
-          "__rl": true,
-          "value": "1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0",
-          "mode": "id"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "TasksDetails",
-          "mode": "name"
-        }
-      },
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
-          "name": "Google Sheets account"
-        }
-      },
-      "continueOnFail": true
-    },
-    {
-      "id": "80dda2d6-79cd-435a-ab6a-09aecee24f9a",
+      "id": "fb0b8bc3-69fe-4686-9bae-d4aceef62de6",
       "name": "GSheets: Clear Bugs",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
       "position": [
-        3080,
-        290
+        2020,
+        645
       ],
       "parameters": {
         "operation": "clear",
@@ -518,64 +583,13 @@
       "continueOnFail": true
     },
     {
-      "id": "bd8dbe25-f31f-47fc-93eb-cbd8aa3a5cf5",
-      "name": "Code: To Task Rows",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        3280,
-        290
-      ],
-      "parameters": {
-        "mode": "runOnceForAllItems",
-        "jsCode": "const d = $('Code: Build Report').first().json;\nconst rows = d.tasksRows || [];\nif (rows.length === 0) return [{ json: { _noop: true } }];\nreturn rows.map(r => ({ json: r }));\n"
-      }
-    },
-    {
-      "id": "7c487174-b0c5-4637-98c4-5b9adadea158",
-      "name": "GSheets: Append Tasks",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.4,
-      "position": [
-        3480,
-        290
-      ],
-      "parameters": {
-        "operation": "append",
-        "documentId": {
-          "__rl": true,
-          "value": "1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0",
-          "mode": "id"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "TasksDetails",
-          "mode": "name"
-        },
-        "columns": {
-          "mappingMode": "autoMapInputData",
-          "value": {},
-          "matchingColumns": [],
-          "schema": []
-        },
-        "options": {}
-      },
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
-          "name": "Google Sheets account"
-        }
-      },
-      "continueOnFail": true
-    },
-    {
-      "id": "4bfb4fe5-67e9-433d-b4a7-396b67838c0c",
+      "id": "b7bac5c7-b1e3-4642-a0d4-ff8f869257d8",
       "name": "Code: To Bug Rows",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3680,
-        290
+        2280,
+        645
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
@@ -583,13 +597,13 @@
       }
     },
     {
-      "id": "4787f5ad-9326-4118-b4e8-cb78bbb6cf94",
+      "id": "217d8212-4cb3-459d-9093-9cf8e3bc0254",
       "name": "GSheets: Append Bugs",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
       "position": [
-        3880,
-        290
+        2560,
+        645
       ],
       "parameters": {
         "operation": "append",
@@ -620,13 +634,13 @@
       "continueOnFail": true
     },
     {
-      "id": "7a991944-1906-4abe-8dbf-cd8ccf1f3ef0",
+      "id": "abae9524-b707-4960-93cb-940ff32b5689",
       "name": "Code: Restore Email",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4080,
-        290
+        1740,
+        1190
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
@@ -634,13 +648,13 @@
       }
     },
     {
-      "id": "cdc7e7eb-d304-4856-a202-16400c98f2e3",
+      "id": "5ce93fca-3ae9-40fb-a582-650e9cb5e13f",
       "name": "Send Email via Gmail",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        4280,
-        290
+        2020,
+        1190
       ],
       "parameters": {
         "sendTo": "bireports@indiamart.com",
@@ -683,92 +697,39 @@
             "node": "HTTP: Merp Opened",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Merp Opened": {
-      "main": [
-        [
+          },
           {
             "node": "HTTP: Merp Open End",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Merp Open End": {
-      "main": [
-        [
+          },
           {
             "node": "HTTP: Bugs Opened",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Bugs Opened": {
-      "main": [
-        [
+          },
           {
             "node": "HTTP: Bugs Open End",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Bugs Open End": {
-      "main": [
-        [
+          },
           {
             "node": "HTTP: Dev Tasks",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Dev Tasks": {
-      "main": [
-        [
+          },
           {
             "node": "HTTP: Todo Tasks",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Todo Tasks": {
-      "main": [
-        [
+          },
           {
             "node": "HTTP: Tasks Detail",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Tasks Detail": {
-      "main": [
-        [
+          },
           {
             "node": "HTTP: Bugs Detail",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Bugs Detail": {
-      "main": [
-        [
-          {
-            "node": "Code: Build Report",
             "type": "main",
             "index": 0
           }
@@ -782,22 +743,21 @@
             "node": "HTTP: Create Tasks Tab",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Create Tasks Tab": {
-      "main": [
-        [
+          },
           {
             "node": "HTTP: Create Bugs Tab",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code: Restore Email",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "HTTP: Create Bugs Tab": {
+    "HTTP: Create Tasks Tab": {
       "main": [
         [
           {
@@ -809,17 +769,6 @@
       ]
     },
     "GSheets: Clear Tasks": {
-      "main": [
-        [
-          {
-            "node": "GSheets: Clear Bugs",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "GSheets: Clear Bugs": {
       "main": [
         [
           {
@@ -841,7 +790,18 @@
         ]
       ]
     },
-    "GSheets: Append Tasks": {
+    "HTTP: Create Bugs Tab": {
+      "main": [
+        [
+          {
+            "node": "GSheets: Clear Bugs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GSheets: Clear Bugs": {
       "main": [
         [
           {
@@ -863,17 +823,6 @@
         ]
       ]
     },
-    "GSheets: Append Bugs": {
-      "main": [
-        [
-          {
-            "node": "Code: Restore Email",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Code: Restore Email": {
       "main": [
         [
@@ -881,6 +830,105 @@
             "node": "Send Email via Gmail",
             "type": "main",
             "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code: Build Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Merp Opened": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Merp Open End": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP: Bugs Opened": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "HTTP: Bugs Open End": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "HTTP: Dev Tasks": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "HTTP: Todo Tasks": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "HTTP: Tasks Detail": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "HTTP: Bugs Detail": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 7
           }
         ]
       ]

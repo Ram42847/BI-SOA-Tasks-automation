@@ -1,8 +1,8 @@
 # Weekly SOA Report — n8n Workflow Documentation
 
 **Workflow file:** `n8n_workflow.json`  
-**Total nodes:** 22  
-**Trigger:** Manual or Scheduled (every Monday)  
+**Total nodes:** 23 (including 1 Merge node)  
+**Trigger:** Manual or Scheduled (every Sunday at 8:00 PM)  
 **Output:** HTML email via Gmail + rows written to Google Sheets
 
 ---
@@ -10,46 +10,48 @@
 ## Flow Overview
 
 ```
-[1]  Code: Setup
-         ↓  authHeader, weekStart, weekEnd, 8 filter JSON strings
-[2]  HTTP: Merp Opened          ← API call #1
-         ↓  raw work packages JSON
-[3]  HTTP: Merp Open End        ← API call #2
-         ↓  raw work packages JSON
-[4]  HTTP: Bugs Opened          ← API call #3
-         ↓  raw work packages JSON
-[5]  HTTP: Bugs Open End        ← API call #4
-         ↓  raw work packages JSON
-[6]  HTTP: Dev Tasks            ← API call #5
-         ↓  raw work packages JSON
-[7]  HTTP: Todo Tasks           ← API call #6
-         ↓  raw work packages JSON
-[8]  HTTP: Tasks Detail         ← API call #7
-         ↓  raw work packages JSON
-[9]  HTTP: Bugs Detail          ← API call #8
-         ↓  raw work packages JSON
-[10] Code: Build Report
-         ↓  { html, subject, tasksRows[], bugsRows[] }
-[11] HTTP: Create Tasks Tab     ← Sheets API — create tab if missing
-         ↓  pass-through (continueOnFail=true)
-[12] HTTP: Create Bugs Tab      ← Sheets API — create tab if missing
-         ↓  pass-through (continueOnFail=true)
-[13] GSheets: Clear Tasks       ← clear TasksDetails tab
-         ↓  pass-through (continueOnFail=true)
-[14] GSheets: Clear Bugs        ← clear BugsDetails tab
-         ↓  pass-through (continueOnFail=true)
-[15] Code: To Task Rows         ← explode tasksRows[] → N items
-         ↓  N individual task row items
-[16] GSheets: Append Tasks      ← append N rows to TasksDetails
-         ↓  N items (pass-through)
-[17] Code: To Bug Rows          ← explode bugsRows[] → M items (runOnceForAllItems)
-         ↓  M individual bug row items
-[18] GSheets: Append Bugs       ← append M rows to BugsDetails
-         ↓  M items (pass-through)
-[19] Code: Restore Email        ← collapse back to 1 item (runOnceForAllItems)
-         ↓  { html, subject }
-[20] Send Email via Gmail
+[Manual Trigger] ──┐
+                   ├──→ [1] Code: Setup
+[Schedule Trigger]─┘         │
+                              │  (fans out — all 8 HTTP calls fire in parallel)
+                    ┌─────────┴──────────────────────────────────────┐
+                    ↓         ↓         ↓        ↓        ↓    ...   ↓
+              [2] HTTP:  [3] HTTP:  [4] HTTP: [5] HTTP: [6] HTTP: [7] HTTP: [8] HTTP: [9] HTTP:
+              Merp       Merp       Bugs      Bugs      Dev       Todo      Tasks     Bugs
+              Opened     Open End   Opened    Open End  Tasks     Tasks     Detail    Detail
+                    │         │         │        │        │         │         │         │
+                    └─────────┴─────────┴────────┴────────┴─────────┴─────────┴─────────┘
+                                              │
+                                    [10] Merge (waits for all 8)
+                                              │
+                                   [11] Code: Build Report
+                                              │
+                          ┌───────────────────┼───────────────────┐
+                          │                   │                   │
+                    Tasks path           Bugs path          Email path
+                          │                   │                   │
+              [12] HTTP: Create     [16] HTTP: Create   [20] Code: Restore
+                   Tasks Tab             Bugs Tab             Email
+                          │                   │                   │
+              [13] GSheets:         [17] GSheets:       [21] Send Email
+                   Clear Tasks           Clear Bugs           via Gmail
+                          │                   │
+              [14] Code:            [18] Code:
+                   To Task Rows          To Bug Rows
+                          │                   │
+              [15] GSheets:         [19] GSheets:
+                   Append Tasks          Append Bugs
 ```
+
+---
+
+## Why Parallel?
+
+None of the 8 HTTP nodes need each other's output — they all independently read `authHeader` and their filter string from `Code: Setup`. Running them sequentially was just wasted wait time.
+
+After `Code: Build Report`, the Tasks sheet operations, Bugs sheet operations, and email sending are completely independent — no data flows between them.
+
+**Execution time improvement:** 8 sequential API calls (~8s) → 8 parallel API calls (~1s for the slowest one).
 
 ---
 
@@ -66,13 +68,13 @@
   - `weekStart (ws)` = last Sunday (e.g. `2026-06-22`)
   - `weekEnd (we)` = last Saturday (e.g. `2026-06-28`)
 - Calculates `cutoff` = weekStart minus 365 days (year-lookback window start)
-- Builds and serialises 8 filter JSON strings — one for each API call
+- Builds 8 filter JSON strings — one for each parallel API call
 
-**Output passed to next node:**
+**Output (passed to all 8 HTTP nodes simultaneously):**
 
 | Field | Example | Purpose |
 |---|---|---|
-| `authHeader` | `Basic YXBpa2V5...` | Used in Authorization header by all HTTP nodes |
+| `authHeader` | `Basic YXBpa2V5...` | Authorization header for all HTTP nodes |
 | `weekStart` | `2026-06-22` | Sunday of the report week |
 | `weekEnd` | `2026-06-28` | Saturday of the report week |
 | `merpOpenedFilter` | JSON string | Filter for Node 2 |
@@ -86,247 +88,180 @@
 
 ---
 
+### Nodes 2–9 — HTTP API Calls (run in parallel)
+
+All 8 nodes fire simultaneously after Setup. Each reads `authHeader` and its own filter from `Code: Setup`. None of them need each other's output.
+
+---
+
 ### Node 2 — `HTTP: Merp Opened`
-**Type:** HTTP Request (OpenProject API, call #1)  
-**Purpose:** Fetch non-bug tasks **created this week** → count becomes the **B value** for Merp SOA Tasks
+**Purpose:** Non-bug tasks **created this week** → count = **B value** for Merp SOA Tasks
 
 **API Call:**
 ```
 GET https://project.intermesh.net/api/v3/work_packages
-Headers:
-  Authorization: Basic <authHeader>
-Query params:
-  pageSize = 1000
-  offset   = 1
-  filters  = [
-    { "project":   { "operator": "=",   "values": ["75"] } },
-    { "createdAt": { "operator": "<>d", "values": ["2026-06-22", "2026-06-28"] } },
-    { "type":      { "operator": "!",   "values": ["19"] } }
-  ]
+Authorization: Basic <authHeader>
+pageSize=1000  offset=1
+filters = [
+  { "project":   { "operator": "=",   "values": ["75"] } },
+  { "createdAt": { "operator": "<>d", "values": ["2026-06-22", "2026-06-28"] } },
+  { "type":      { "operator": "!",   "values": ["19"] } }
+]
 ```
-
-**Filter breakdown:**
-- `project = 75` — MERP Services project only
-- `createdAt between weekStart and weekEnd` — created this week (Status = all)
-- `type is not 19 (API Bug)` — exclude bug tickets
-
-**Output passed to next node:** Raw OpenProject JSON response (work packages with `_embedded.elements`)
+- Status = all | Created this week | Type is not API Bug  
+**Output → Merge (input 0)**
 
 ---
 
 ### Node 3 — `HTTP: Merp Open End`
-**Type:** HTTP Request (OpenProject API, call #2)  
-**Purpose:** Fetch all non-bug tasks currently in **open status** within last 365 days → count is **total open tasks at end of week**
+**Purpose:** Non-bug tasks in **open status** within last 365 days → count = **total open tasks at end of week**
 
 **API Call:**
 ```
 GET https://project.intermesh.net/api/v3/work_packages
-Headers:
-  Authorization: Basic <authHeader>
-Query params:
-  pageSize = 1000
-  offset   = 1
-  filters  = [
-    { "project":   { "operator": "=",   "values": ["75"] } },
-    { "createdAt": { "operator": "<>d", "values": ["2025-06-22", "2026-06-28"] } },
-    { "status":    { "operator": "o",   "values": [] } },
-    { "type":      { "operator": "!",   "values": ["19"] } }
-  ]
+filters = [
+  { "project":   { "operator": "=",   "values": ["75"] } },
+  { "createdAt": { "operator": "<>d", "values": ["2025-06-22", "2026-06-28"] } },
+  { "status":    { "operator": "o",   "values": [] } },
+  { "type":      { "operator": "!",   "values": ["19"] } }
+]
 ```
-
-**Filter breakdown:**
-- `createdAt between cutoff and weekEnd` — tickets created within last 365 days
-- `status = o` — **open status group** (built-in OpenProject filter, covers all "open" statuses)
-- `type is not 19 (API Bug)` — exclude bugs
-
-**Output passed to next node:** Raw OpenProject JSON response
+- Status = open (built-in group) | Created last 365 days | Type is not API Bug  
+**Output → Merge (input 1)**
 
 ---
 
 ### Node 4 — `HTTP: Bugs Opened`
-**Type:** HTTP Request (OpenProject API, call #3)  
-**Purpose:** Fetch bug tickets **created this week** → count becomes the **B value** for SOA Bugs
+**Purpose:** Bug tickets **created this week** → count = **B value** for SOA Bugs
 
 **API Call:**
 ```
 GET https://project.intermesh.net/api/v3/work_packages
-Headers:
-  Authorization: Basic <authHeader>
-Query params:
-  pageSize = 1000
-  offset   = 1
-  filters  = [
-    { "project":   { "operator": "=",   "values": ["75"] } },
-    { "createdAt": { "operator": "<>d", "values": ["2026-06-22", "2026-06-28"] } },
-    { "type":      { "operator": "=",   "values": ["19"] } }
-  ]
+filters = [
+  { "project":   { "operator": "=",   "values": ["75"] } },
+  { "createdAt": { "operator": "<>d", "values": ["2026-06-22", "2026-06-28"] } },
+  { "type":      { "operator": "=",   "values": ["19"] } }
+]
 ```
-
-**Filter breakdown:**
-- `createdAt between weekStart and weekEnd` — created this week (Status = all)
-- `type = 19 (API Bug)` — bugs only
-
-**Output passed to next node:** Raw OpenProject JSON response
+- Status = all | Created this week | Type is API Bug  
+**Output → Merge (input 2)**
 
 ---
 
 ### Node 5 — `HTTP: Bugs Open End`
-**Type:** HTTP Request (OpenProject API, call #4)  
-**Purpose:** Fetch all open bugs (excluding STAGE environment) → count is **total open bugs at end of week**
+**Purpose:** Open bugs excluding STAGE → count = **total open bugs at end of week**
 
 **API Call:**
 ```
 GET https://project.intermesh.net/api/v3/work_packages
-Headers:
-  Authorization: Basic <authHeader>
-Query params:
-  pageSize = 1000
-  offset   = 1
-  filters  = [
-    { "project":      { "operator": "=",   "values": ["75"] } },
-    { "createdAt":    { "operator": "<>d", "values": ["2025-06-22", "2026-06-28"] } },
-    { "status":       { "operator": "o",   "values": [] } },
-    { "type":         { "operator": "=",   "values": ["19"] } },
-    { "customField9": { "operator": "!",   "values": ["22"] } }
-  ]
+filters = [
+  { "project":      { "operator": "=",   "values": ["75"] } },
+  { "createdAt":    { "operator": "<>d", "values": ["2025-06-22", "2026-06-28"] } },
+  { "status":       { "operator": "o",   "values": [] } },
+  { "type":         { "operator": "=",   "values": ["19"] } },
+  { "customField9": { "operator": "!",   "values": ["22"] } }
+]
 ```
-
-**Filter breakdown:**
-- `status = o` — open status group
-- `type = 19 (API Bug)` — bugs only
-- `customField9 is not 22` — Environment field is not STAGE (excludes test/staging bugs)
-
-**Output passed to next node:** Raw OpenProject JSON response
+- Status = open | Created last 365 days | Type is API Bug | Environment is not STAGE  
+**Output → Merge (input 3)**
 
 ---
 
 ### Node 6 — `HTTP: Dev Tasks`
-**Type:** HTTP Request (OpenProject API, call #5)  
-**Purpose:** Fetch all tickets (any type) **updated this week** within the last year → used to build the **Developer Activity table** in the email
+**Purpose:** All tickets **updated this week** within last year → used to build the **Developer Activity table**
 
 **API Call:**
 ```
 GET https://project.intermesh.net/api/v3/work_packages
-Headers:
-  Authorization: Basic <authHeader>
-Query params:
-  pageSize = 1000
-  offset   = 1
-  filters  = [
-    { "project":   { "operator": "=",   "values": ["75"] } },
-    { "createdAt": { "operator": "<>d", "values": ["2025-06-22", "2026-06-28"] } },
-    { "updatedAt": { "operator": "<>d", "values": ["2026-06-22", "2026-06-28"] } }
-  ]
+filters = [
+  { "project":   { "operator": "=",   "values": ["75"] } },
+  { "createdAt": { "operator": "<>d", "values": ["2025-06-22", "2026-06-28"] } },
+  { "updatedAt": { "operator": "<>d", "values": ["2026-06-22", "2026-06-28"] } }
+]
 ```
-
-**Filter breakdown:**
-- `createdAt between cutoff and weekEnd` — created within last 365 days
-- `updatedAt between weekStart and weekEnd` — updated this week
-- No type filter — includes all ticket types (tasks, bugs, stories, etc.)
-
-**Output passed to next node:** Raw OpenProject JSON response (grouped by developer in Build node)
+- Status = all | Created last 365 days | Updated this week | Type = all (no type filter)  
+**Output → Merge (input 4)**
 
 ---
 
 ### Node 7 — `HTTP: Todo Tasks`
-**Type:** HTTP Request (OpenProject API, call #6)  
-**Purpose:** Fetch non-bug tasks with status exactly **"To Do"** (ID=1) → count is the **Backlog** metric
+**Purpose:** Non-bug tasks with status **"To Do"** (ID=1) → count = **Backlog** metric
 
 **API Call:**
 ```
 GET https://project.intermesh.net/api/v3/work_packages
-Headers:
-  Authorization: Basic <authHeader>
-Query params:
-  pageSize = 1000
-  offset   = 1
-  filters  = [
-    { "project":   { "operator": "=",   "values": ["75"] } },
-    { "createdAt": { "operator": "<>d", "values": ["2025-06-22", "2026-06-28"] } },
-    { "status":    { "operator": "=",   "values": ["1"] } },
-    { "type":      { "operator": "!",   "values": ["19"] } }
-  ]
+filters = [
+  { "project":   { "operator": "=",   "values": ["75"] } },
+  { "createdAt": { "operator": "<>d", "values": ["2025-06-22", "2026-06-28"] } },
+  { "status":    { "operator": "=",   "values": ["1"] } },
+  { "type":      { "operator": "!",   "values": ["19"] } }
+]
 ```
-
-**Filter breakdown:**
-- `status = 1 (To Do)` — exact status match (not the open group)
-- `type is not 19 (API Bug)` — exclude bugs
-
-**How result is used in Node 10:**
-- `merpBacklog = todoEls.length` (count of To Do tickets)
-- `merpWip = merpOpenEnd − merpBacklog`
-
-**Output passed to next node:** Raw OpenProject JSON response
+- Status = exactly "To Do" (not the open group) | Created last 365 days | Type is not API Bug  
+- `merpBacklog = todoEls.length` ; `merpWip = merpOpenEnd − merpBacklog`  
+**Output → Merge (input 5)**
 
 ---
 
 ### Node 8 — `HTTP: Tasks Detail`
-**Type:** HTTP Request (OpenProject API, call #7)  
-**Purpose:** Fetch full work package records for non-bug tasks **updated this week** → rows written to **TasksDetails** Google Sheet
+**Purpose:** Full records of non-bug tasks **updated this week** → rows for **TasksDetails** sheet
 
 **API Call:**
 ```
 GET https://project.intermesh.net/api/v3/work_packages
-Headers:
-  Authorization: Basic <authHeader>
-Query params:
-  pageSize = 1000
-  offset   = 1
-  filters  = [
-    { "project":   { "operator": "=",   "values": ["75"] } },
-    { "createdAt": { "operator": "<>d", "values": ["2025-06-22", "2026-06-28"] } },
-    { "updatedAt": { "operator": "<>d", "values": ["2026-06-22", "2026-06-28"] } },
-    { "type":      { "operator": "!",   "values": ["19"] } }
-  ]
+filters = [
+  { "project":   { "operator": "=",   "values": ["75"] } },
+  { "createdAt": { "operator": "<>d", "values": ["2025-06-22", "2026-06-28"] } },
+  { "updatedAt": { "operator": "<>d", "values": ["2026-06-22", "2026-06-28"] } },
+  { "type":      { "operator": "!",   "values": ["19"] } }
+]
 ```
-
-**Filter breakdown:**
-- `createdAt between cutoff and weekEnd` — created within last 365 days
-- `updatedAt between weekStart and weekEnd` — updated this week
-- `type is not 19 (API Bug)` — tasks only, no bugs
-
-**Output passed to next node:** Raw OpenProject JSON response (full work package fields)
+- Status = all | Created last 365 days | Updated this week | Type is not API Bug  
+**Output → Merge (input 6)**
 
 ---
 
 ### Node 9 — `HTTP: Bugs Detail`
-**Type:** HTTP Request (OpenProject API, call #8)  
-**Purpose:** Fetch full work package records for bug tickets **updated this week** → rows written to **BugsDetails** Google Sheet
+**Purpose:** Full records of bug tickets **updated this week** → rows for **BugsDetails** sheet
 
 **API Call:**
 ```
 GET https://project.intermesh.net/api/v3/work_packages
-Headers:
-  Authorization: Basic <authHeader>
-Query params:
-  pageSize = 1000
-  offset   = 1
-  filters  = [
-    { "project":   { "operator": "=",   "values": ["75"] } },
-    { "createdAt": { "operator": "<>d", "values": ["2025-06-22", "2026-06-28"] } },
-    { "updatedAt": { "operator": "<>d", "values": ["2026-06-22", "2026-06-28"] } },
-    { "type":      { "operator": "=",   "values": ["19"] } }
-  ]
+filters = [
+  { "project":   { "operator": "=",   "values": ["75"] } },
+  { "createdAt": { "operator": "<>d", "values": ["2025-06-22", "2026-06-28"] } },
+  { "updatedAt": { "operator": "<>d", "values": ["2026-06-22", "2026-06-28"] } },
+  { "type":      { "operator": "=",   "values": ["19"] } }
+]
 ```
-
-**Filter breakdown:**
-- `updatedAt between weekStart and weekEnd` — updated this week
-- `type = 19 (API Bug)` — bugs only
-- No Environment filter (detail view includes all environments)
-
-**Output passed to next node:** Raw OpenProject JSON response
+- Status = all | Created last 365 days | Updated this week | Type is API Bug  
+**Output → Merge (input 7)**
 
 ---
 
-### Node 10 — `Code: Build Report`
+### Node 10 — `Merge`
+**Type:** Merge (mode: append)
+
+**What it does:**
+- Waits until **all 8 HTTP nodes** have completed (each connects to a separate input index 0–7)
+- Combines all their output items into one batch
+- Fires once to trigger `Code: Build Report`
+
+**Why needed:** With 8 parallel HTTP calls, Build Report must not start until all 8 have finished. The Merge node is the synchronisation point.
+
+**Output → Code: Build Report**
+
+---
+
+### Node 11 — `Code: Build Report`
 **Type:** Code (JavaScript, runOnceForAllItems)
 
 **What it does:**
-Reads responses from all 8 HTTP nodes and computes every metric in the report.
+Reads all 8 HTTP node responses (via `$('HTTP: ...')` references) and computes all report metrics.
 
 **Metrics calculated:**
 
-| Variable | Source Node | Calculation | Report Row |
+| Variable | Source | Calculation | Report Row |
 |---|---|---|---|
 | `merpB` | HTTP: Merp Opened | `.length` | Opened During this week (B) |
 | `merpOpenEnd` | HTTP: Merp Open End | `.length` | Open: End of this week |
@@ -338,176 +273,138 @@ Reads responses from all 8 HTTP nodes and computes every metric in the report.
 | `internal` | — | `merpB − business` | Internally Opened Tickets (C) |
 
 **Rolling 4-week cache** (`$getWorkflowStaticData('global').cache`):
-- Cache key: `"2026-06-22_2026-06-28"` (weekStart_weekEnd)
-- Saves current week's metrics to cache
-- Reads last 3 weeks from cache to build the 4-column table
-- Derives `merp_A` = open at week beginning = previous week's `merp_open`
-- Calculates `merp_C` = A + B − open_end (closed this week)
+- Key format: `"2026-06-22_2026-06-28"`
+- Saves current week; reads prior 3 weeks to build the 4-column table
+- Derives `merp_A` (open at week start) and calculates `merp_C` (closed = A + B − open_end)
 
-**Developer table** (built from HTTP: Dev Tasks):
-- Groups work packages by Assignee and Accountable (responsible) person
-- Deduplicates same person + same ticket
-- Sorted alphabetically by developer name
+**Developer table:** Groups HTTP: Dev Tasks results by Assignee + Accountable, deduplicates, sorts alphabetically.
 
 **Sheet rows extracted:**
-- `tasksRows[]` = each record from HTTP: Tasks Detail flattened to:
-  `{ ID, Subject, Type, Status, Author, Assignee, Accountable, "Updated on", "Created on", "Week Of" }`
-- `bugsRows[]` = same shape from HTTP: Bugs Detail
+- `tasksRows[]` from HTTP: Tasks Detail — `{ ID, Subject, Type, Status, Author, Assignee, Accountable, "Updated on", "Created on", "Week Of" }`
+- `bugsRows[]` from HTTP: Bugs Detail — same shape
 
-**Output passed to next node:**
+**Output (fans out to 3 parallel paths simultaneously):**
 
-| Field | Type | Description |
-|---|---|---|
-| `html` | string | Complete HTML email body |
-| `subject` | string | e.g. `BI Weekly Report : BI SOA Task Status Report : 22 Jun - 28 Jun 2026` |
-| `tasksRows` | array | Flat task rows for Google Sheets |
-| `bugsRows` | array | Flat bug rows for Google Sheets |
-
----
-
-### Node 11 — `HTTP: Create Tasks Tab`
-**Type:** HTTP Request (Google Sheets API)  
-**continueOnFail: true** (silently skips if tab already exists)
-
-**Purpose:** Creates the `TasksDetails` tab in the Google Sheet the first time the workflow runs
-
-**API Call:**
-```
-POST https://sheets.googleapis.com/v4/spreadsheets/1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q:batchUpdate
-Authorization: Google OAuth2 (googleSheetsOAuth2Api credential)
-Content-Type: application/json
-
-Body: {"requests":[{"addSheet":{"properties":{"title":"TasksDetails"}}}]}
-```
-
-**Output passed to next node:** Same single item (pass-through)
+| Field | Description |
+|---|---|
+| `html` | Complete HTML email body |
+| `subject` | Email subject line |
+| `tasksRows` | Array of task rows for Google Sheets |
+| `bugsRows` | Array of bug rows for Google Sheets |
 
 ---
 
-### Node 12 — `HTTP: Create Bugs Tab`
-**Type:** HTTP Request (Google Sheets API)  
-**continueOnFail: true**
+## Path A — Tasks Sheet (Nodes 12–15)
 
-**Purpose:** Creates the `BugsDetails` tab in the Google Sheet the first time the workflow runs
+Runs in parallel with Path B and Path C after Build Report.
 
-**API Call:**
+### Node 12 — `HTTP: Create Tasks Tab`
+**Type:** HTTP Request (Google Sheets API) | `continueOnFail: true`
+
+**Purpose:** Create the `TasksDetails` tab the first time — silently skips if already exists.
+
 ```
 POST https://sheets.googleapis.com/v4/spreadsheets/1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q:batchUpdate
 Authorization: Google OAuth2
-Content-Type: application/json
-
-Body: {"requests":[{"addSheet":{"properties":{"title":"BugsDetails"}}}]}
+Body: {"requests":[{"addSheet":{"properties":{"title":"TasksDetails"}}}]}
 ```
 
-**Output passed to next node:** Same single item (pass-through)
+**Output → GSheets: Clear Tasks**
 
 ---
 
 ### Node 13 — `GSheets: Clear Tasks`
-**Type:** Google Sheets (operation: clear)  
-**continueOnFail: true**
+**Type:** Google Sheets (clear) | `continueOnFail: true`
 
-**Purpose:** Wipes all existing rows in `TasksDetails` before writing fresh data. Prevents duplicates on re-run.
+**Purpose:** Wipe all rows in `TasksDetails` before writing fresh data (prevents duplicates on re-run).
 
-**Sheet target:** Tab `TasksDetails` in spreadsheet `1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q`
-
-**Output passed to next node:** Same single item (pass-through)
+**Output → Code: To Task Rows**
 
 ---
 
-### Node 14 — `GSheets: Clear Bugs`
-**Type:** Google Sheets (operation: clear)  
-**continueOnFail: true**
-
-**Purpose:** Wipes all existing rows in `BugsDetails` before writing fresh data
-
-**Sheet target:** Tab `BugsDetails`
-
-**Output passed to next node:** Same single item (pass-through)
-
----
-
-### Node 15 — `Code: To Task Rows`
+### Node 14 — `Code: To Task Rows`
 **Type:** Code (JavaScript, runOnceForAllItems)
 
-**What it does:**
-- Reads `tasksRows[]` directly from `Code: Build Report` (bypasses its own 1-item input)
-- If the array is empty → returns `[{ json: { _noop: true } }]` to keep the chain alive
-- If non-empty → returns N separate items, one per task row
+**Purpose:** Reads `tasksRows[]` from `Code: Build Report` and fans it out into N separate items (one per row). If empty → returns `[{ _noop: true }]` to keep chain alive.
 
-**Why this node is needed:** GSheets Append needs one item per row. Build Report outputs one item with an array inside. This node fans the array out into N separate items.
+**Output → GSheets: Append Tasks** (N items)
 
-**Output passed to next node:** N items, each shaped as:
-```json
-{ "ID": 1234, "Subject": "Task title", "Type": "Task", "Status": "In Progress",
-  "Author": "John", "Assignee": "Jane", "Accountable": "Bob",
-  "Updated on": "2026-06-25 14:30", "Created on": "2026-05-10 09:00", "Week Of": "22 Jun - 28 Jun" }
+---
+
+### Node 15 — `GSheets: Append Tasks`
+**Type:** Google Sheets (append) | `continueOnFail: true`
+
+**Purpose:** Appends N task rows to `TasksDetails`. Each input item = one new row. Uses `autoMapInputData` — field names become column headers automatically.
+
+---
+
+## Path B — Bugs Sheet (Nodes 16–19)
+
+Runs in parallel with Path A and Path C after Build Report.
+
+### Node 16 — `HTTP: Create Bugs Tab`
+**Type:** HTTP Request (Google Sheets API) | `continueOnFail: true`
+
+**Purpose:** Create the `BugsDetails` tab if it doesn't exist.
+
+```
+POST https://sheets.googleapis.com/v4/spreadsheets/1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q:batchUpdate
+Authorization: Google OAuth2
+Body: {"requests":[{"addSheet":{"properties":{"title":"BugsDetails"}}}]}
 ```
 
----
-
-### Node 16 — `GSheets: Append Tasks`
-**Type:** Google Sheets (operation: append)  
-**continueOnFail: true**
-
-**Purpose:** Appends all N task rows into `TasksDetails`. Each input item becomes one new row.
-
-**Sheet target:** Tab `TasksDetails`  
-**Mode:** `autoMapInputData` — uses JSON field names as column headers automatically
-
-**Output passed to next node:** N items (pass-through; next node ignores this count)
+**Output → GSheets: Clear Bugs**
 
 ---
 
-### Node 17 — `Code: To Bug Rows`
+### Node 17 — `GSheets: Clear Bugs`
+**Type:** Google Sheets (clear) | `continueOnFail: true`
+
+**Purpose:** Wipe all rows in `BugsDetails` before writing fresh data.
+
+**Output → Code: To Bug Rows**
+
+---
+
+### Node 18 — `Code: To Bug Rows`
 **Type:** Code (JavaScript, runOnceForAllItems)
 
-**What it does:**
-- Runs **once** regardless of how many items came from Node 16
-- Reads `bugsRows[]` directly from `Code: Build Report`
-- If empty → `[{ json: { _noop: true } }]`; otherwise fans out into M items
+**Purpose:** Reads `bugsRows[]` from `Code: Build Report` and fans it out into M items. If empty → `[{ _noop: true }]`.
 
-**Output passed to next node:** M items, each a flat bug row (same shape as task rows but with `"Week Of"` label)
+**Output → GSheets: Append Bugs** (M items)
 
 ---
 
-### Node 18 — `GSheets: Append Bugs`
-**Type:** Google Sheets (operation: append)  
-**continueOnFail: true**
+### Node 19 — `GSheets: Append Bugs`
+**Type:** Google Sheets (append) | `continueOnFail: true`
 
-**Purpose:** Appends all M bug rows into `BugsDetails`
-
-**Sheet target:** Tab `BugsDetails`
-
-**Output passed to next node:** M items (pass-through)
+**Purpose:** Appends M bug rows to `BugsDetails`.
 
 ---
 
-### Node 19 — `Code: Restore Email`
+## Path C — Email (Nodes 20–21)
+
+Runs in parallel with Path A and Path B after Build Report. Does not wait for sheet writes.
+
+### Node 20 — `Code: Restore Email`
 **Type:** Code (JavaScript, runOnceForAllItems)
 
-**What it does:**
-- Runs **once** regardless of how many items came from Node 18
-- Re-reads `html` and `subject` from `Code: Build Report`
-- Returns exactly **1 item** with just the email fields
+**Purpose:** Re-reads `html` and `subject` from `Code: Build Report` and returns exactly 1 item for Gmail.
 
-**Why this node is needed:** After Append Bugs emits M items, Gmail node needs exactly 1 item to send one email. This node resets item count to 1 and discards the sheet row data.
-
-**Output passed to next node:**
+**Output → Send Email via Gmail**
 ```json
 { "html": "<!DOCTYPE html>...", "subject": "BI Weekly Report : BI SOA Task Status Report : 22 Jun - 28 Jun 2026" }
 ```
 
 ---
 
-### Node 20 — `Send Email via Gmail`
+### Node 21 — `Send Email via Gmail`
 **Type:** Gmail (send)
 
-**What it does:**
-- Sends the weekly HTML report email
-- **To:** `rlc42847@gmail.com`
-- **Subject:** value of `{{ $json.subject }}`
-- **Body (HTML):** value of `{{ $json.html }}`
+- **To:** `bireports@indiamart.com`
+- **CC:** `puneet.agarwal@indiamart.com`, `vipul.bansal1@indiamart.com`
+- **Subject:** `={{ $json.subject }}`
+- **Body (HTML):** `={{ $json.html }}`
 
 **End of workflow.**
 
@@ -521,7 +418,7 @@ Body: {"requests":[{"addSheet":{"properties":{"title":"BugsDetails"}}}]}
 | Merp Open End | **open** | last 365 days | — | is not Bug | — |
 | Bugs Opened | all | this week | — | is Bug | — |
 | Bugs Open End | **open** | last 365 days | — | is Bug | is not STAGE |
-| Dev Tasks | all | last 365 days | this week | — (all) | — |
+| Dev Tasks | all | last 365 days | this week | — (all types) | — |
 | Todo Tasks | **= To Do** | last 365 days | — | is not Bug | — |
 | Tasks Detail | all | last 365 days | this week | is not Bug | — |
 | Bugs Detail | all | last 365 days | this week | is Bug | — |
@@ -535,7 +432,7 @@ Body: {"requests":[{"addSheet":{"properties":{"title":"BugsDetails"}}}]}
 | `PROJECT_ID` | `75` | MERP Services OpenProject project ID |
 | `API_BUG_TYPE_ID` | `19` | Work package type ID for "API Bug" |
 | `API_STORY_TYPE_ID` | `15` | Work package type ID for "Story" (business tickets) |
-| `ENV_STAGE_OPTION_ID` | `22` | customField9 (Environment) option value for "STAGE" |
+| `ENV_STAGE_OPTION_ID` | `22` | customField9 (Environment) option for "STAGE" |
 | `TODO_STATUS_ID` | `1` | Status ID for "To Do" |
 | `YEAR_LOOKBACK_DAYS` | `365` | Year-lookback window length |
 | `operator: 'o'` | built-in | OpenProject "Status is open" group |
@@ -555,10 +452,8 @@ Body: {"requests":[{"addSheet":{"properties":{"title":"BugsDetails"}}}]}
     "bugs_B": 9, "bugs_C": 13, "bugs_open": 12,
     "biz_opened": 10, "int_opened": 10,
     "dev_tasks": { "John Smith": [{ "id": 1234, "subject": "Fix login bug" }] }
-  },
-  "2026-06-15_2026-06-21": { ... },
-  "2026-06-22_2026-06-28": { ... }
+  }
 }
 ```
 
-The cache keeps data for the **4 most recent weeks**. Each run adds the current week and the 4-week window slides forward automatically.
+Keeps the **4 most recent weeks**. Slides forward each run.

@@ -1,30 +1,30 @@
 {
   "name": "SOA Monthly Report",
-  "id": "9a7b4141-f1ac-44ca-9dc0-38616922c4bd",
+  "id": "66d59acb-ae36-4876-89a6-83b077665c1d",
   "active": false,
   "settings": {
     "executionOrder": "v1"
   },
   "nodes": [
     {
-      "id": "5e584768-10a9-4725-a28d-0c2a32ff98a9",
+      "id": "91921dc1-2a46-4e63-81e5-68c5cdf485a8",
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
         200,
-        200
+        480
       ],
       "parameters": {}
     },
     {
-      "id": "7c9821c1-20a5-4f50-affc-2f87e9b2d3bf",
+      "id": "102cbf29-38b5-4bfa-99b8-54910022e5c0",
       "name": "Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
         200,
-        380
+        640
       ],
       "parameters": {
         "rule": {
@@ -38,13 +38,13 @@
       }
     },
     {
-      "id": "02135ea6-6097-41cc-ba5a-9c8a5f5956ae",
+      "id": "c86d377c-08e7-4628-9840-1982a92ecf4b",
       "name": "Code: Setup Monthly",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         440,
-        290
+        560
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
@@ -52,13 +52,13 @@
       }
     },
     {
-      "id": "01572914-6e77-49bf-8dfb-4b1f57307fd6",
+      "id": "ab9eb9a6-d2d1-427a-9e2c-d60aafe2c8da",
       "name": "HTTP: Merp Opened",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        680,
-        290
+        900,
+        50
       ],
       "parameters": {
         "method": "GET",
@@ -94,13 +94,13 @@
       }
     },
     {
-      "id": "91cee584-63e3-46ce-aee6-8e978441ae70",
+      "id": "98ddeb5d-bd7f-4450-92ac-0acac2306632",
       "name": "HTTP: Merp Open End",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        880,
-        290
+        900,
+        220
       ],
       "parameters": {
         "method": "GET",
@@ -136,13 +136,13 @@
       }
     },
     {
-      "id": "6d112281-d765-4f89-bf3c-738ba5a2619b",
+      "id": "f586b77d-3684-4a78-aba8-396599e15247",
       "name": "HTTP: Bugs Opened",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1080,
-        290
+        900,
+        390
       ],
       "parameters": {
         "method": "GET",
@@ -178,13 +178,13 @@
       }
     },
     {
-      "id": "fa0eb04b-0181-4bfe-b09f-bac51151cad3",
+      "id": "57295597-4edd-46d0-8c48-42bb849e2e2a",
       "name": "HTTP: Bugs Open End",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1280,
-        290
+        900,
+        560
       ],
       "parameters": {
         "method": "GET",
@@ -220,13 +220,13 @@
       }
     },
     {
-      "id": "8cfd9ae3-b43c-4a37-95a4-cb735395b64f",
+      "id": "35d5e924-fb54-42b9-bebe-187f650d9d40",
       "name": "HTTP: Todo Tasks (M)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1480,
-        290
+        900,
+        730
       ],
       "parameters": {
         "method": "GET",
@@ -262,13 +262,13 @@
       }
     },
     {
-      "id": "748ee5d4-83a2-45ae-8f80-da86a6f23a98",
+      "id": "78998b32-de0f-44a8-a617-5440c1835a27",
       "name": "HTTP: Tasks Detail",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1680,
-        290
+        900,
+        900
       ],
       "parameters": {
         "method": "GET",
@@ -304,13 +304,13 @@
       }
     },
     {
-      "id": "2843e494-13e9-4cc8-b035-12f22457c0a6",
+      "id": "1dc685f5-ef0c-45d2-a6a3-ed4267ee9f48",
       "name": "HTTP: Bugs Detail",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1880,
-        290
+        900,
+        1070
       ],
       "parameters": {
         "method": "GET",
@@ -346,13 +346,27 @@
       }
     },
     {
-      "id": "b393f6c3-3b18-443a-b939-450720c0c2fc",
+      "id": "d381fdac-2018-40a7-91d8-54ff16d88cc2",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1100,
+        560
+      ],
+      "parameters": {
+        "mode": "append",
+        "options": {}
+      }
+    },
+    {
+      "id": "f3dc1e23-8525-4ad1-bfa7-bccad402c946",
       "name": "Code: Build Report Monthly",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2080,
-        290
+        1380,
+        560
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
@@ -360,14 +374,14 @@
       }
     },
     {
-      "id": "82cb7138-5bbc-4ab0-b6ed-4165820d76de",
+      "id": "777f59c2-838b-4187-b262-57b5b4137899",
       "name": "HTTP: Create Tasks Tab",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "continueOnFail": true,
       "position": [
-        2280,
-        290
+        1660,
+        100
       ],
       "parameters": {
         "method": "POST",
@@ -388,14 +402,95 @@
       }
     },
     {
-      "id": "500a1056-3c5b-48af-92b6-f4cb75e51056",
+      "id": "8f7666ae-eadc-4bdd-a624-8113ef75f4ac",
+      "name": "GSheets: Clear Tasks (M)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        1940,
+        100
+      ],
+      "parameters": {
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "value": "1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Code: Build Report Monthly').first().json.sheetTabTasks }}",
+          "mode": "name"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "c806cc50-b6df-4ba1-8d4e-c04c5aaa1177",
+      "name": "Code: To Task Rows (M)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2180,
+        100
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const d = $('Code: Build Report Monthly').first().json;\nconst rows = d.tasksRows || [];\nif (rows.length === 0) return [{ json: { _noop: true } }];\nreturn rows.map(r => ({ json: r }));\n"
+      }
+    },
+    {
+      "id": "409572dd-f68a-4905-8b11-7cb559179f81",
+      "name": "GSheets: Append Tasks (M)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        2460,
+        100
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Code: Build Report Monthly').first().json.sheetTabTasks }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "55b9e605-ee47-45ec-8b92-cf05444b595f",
       "name": "HTTP: Create Bugs Tab",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "continueOnFail": true,
       "position": [
-        2480,
-        290
+        1660,
+        560
       ],
       "parameters": {
         "method": "POST",
@@ -416,43 +511,13 @@
       }
     },
     {
-      "id": "d291c73a-8024-4829-83ab-ed46fa28a377",
-      "name": "GSheets: Clear Tasks (M)",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.4,
-      "position": [
-        2680,
-        290
-      ],
-      "parameters": {
-        "operation": "clear",
-        "documentId": {
-          "__rl": true,
-          "value": "1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0",
-          "mode": "id"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "={{ $('Code: Build Report Monthly').first().json.sheetTabTasks }}",
-          "mode": "name"
-        }
-      },
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
-          "name": "Google Sheets account"
-        }
-      },
-      "continueOnFail": true
-    },
-    {
-      "id": "37d218f2-64b1-45ad-ab19-53a675ba99a3",
+      "id": "bcc67da1-cece-4ec0-96d8-3b889f97c321",
       "name": "GSheets: Clear Bugs (M)",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
       "position": [
-        2880,
-        290
+        1940,
+        560
       ],
       "parameters": {
         "operation": "clear",
@@ -476,64 +541,13 @@
       "continueOnFail": true
     },
     {
-      "id": "5afcce76-28e4-4f15-be7a-821e5cb9c103",
-      "name": "Code: To Task Rows (M)",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2880,
-        290
-      ],
-      "parameters": {
-        "mode": "runOnceForAllItems",
-        "jsCode": "const d = $('Code: Build Report Monthly').first().json;\nconst rows = d.tasksRows || [];\nif (rows.length === 0) return [{ json: { _noop: true } }];\nreturn rows.map(r => ({ json: r }));\n"
-      }
-    },
-    {
-      "id": "caf9b687-d807-4b15-8693-7270108206a6",
-      "name": "GSheets: Append Tasks (M)",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.4,
-      "position": [
-        3080,
-        290
-      ],
-      "parameters": {
-        "operation": "append",
-        "documentId": {
-          "__rl": true,
-          "value": "1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0",
-          "mode": "id"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "={{ $('Code: Build Report Monthly').first().json.sheetTabTasks }}",
-          "mode": "name"
-        },
-        "columns": {
-          "mappingMode": "autoMapInputData",
-          "value": {},
-          "matchingColumns": [],
-          "schema": []
-        },
-        "options": {}
-      },
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "GOOGLE_SHEETS_CREDENTIAL_ID",
-          "name": "Google Sheets account"
-        }
-      },
-      "continueOnFail": true
-    },
-    {
-      "id": "940e5c54-1b37-47eb-bf7c-d52c68f7f8b5",
+      "id": "bfcf7188-6776-422d-a8a9-6a31fca4b991",
       "name": "Code: To Bug Rows (M)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3280,
-        290
+        2180,
+        560
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
@@ -541,13 +555,13 @@
       }
     },
     {
-      "id": "5f950ee5-de44-4645-851e-a81c539a9371",
+      "id": "f4c3a965-a236-4447-afa6-2f5b7f3d5b51",
       "name": "GSheets: Append Bugs (M)",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
       "position": [
-        3480,
-        290
+        2460,
+        560
       ],
       "parameters": {
         "operation": "append",
@@ -578,13 +592,13 @@
       "continueOnFail": true
     },
     {
-      "id": "9d77a824-8e0b-42e5-87dd-9f6d3badc071",
+      "id": "9802d01b-a215-429c-83c5-36a7d54fc94b",
       "name": "Code: Restore Email (M)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3680,
-        290
+        1660,
+        1020
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
@@ -592,13 +606,13 @@
       }
     },
     {
-      "id": "d56e7bea-17a1-422a-a8ef-13e31fa549ad",
+      "id": "ec44e56c-708b-442e-8cec-88e3405f8328",
       "name": "Send Email via Gmail",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        3880,
-        290
+        1940,
+        1020
       ],
       "parameters": {
         "sendTo": "bireports@indiamart.com",
@@ -641,81 +655,34 @@
             "node": "HTTP: Merp Opened",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Merp Opened": {
-      "main": [
-        [
+          },
           {
             "node": "HTTP: Merp Open End",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Merp Open End": {
-      "main": [
-        [
+          },
           {
             "node": "HTTP: Bugs Opened",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Bugs Opened": {
-      "main": [
-        [
+          },
           {
             "node": "HTTP: Bugs Open End",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Bugs Open End": {
-      "main": [
-        [
+          },
           {
             "node": "HTTP: Todo Tasks (M)",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Todo Tasks (M)": {
-      "main": [
-        [
+          },
           {
             "node": "HTTP: Tasks Detail",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Tasks Detail": {
-      "main": [
-        [
+          },
           {
             "node": "HTTP: Bugs Detail",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Bugs Detail": {
-      "main": [
-        [
-          {
-            "node": "Code: Build Report Monthly",
             "type": "main",
             "index": 0
           }
@@ -729,22 +696,21 @@
             "node": "HTTP: Create Tasks Tab",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Create Tasks Tab": {
-      "main": [
-        [
+          },
           {
             "node": "HTTP: Create Bugs Tab",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code: Restore Email (M)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "HTTP: Create Bugs Tab": {
+    "HTTP: Create Tasks Tab": {
       "main": [
         [
           {
@@ -756,17 +722,6 @@
       ]
     },
     "GSheets: Clear Tasks (M)": {
-      "main": [
-        [
-          {
-            "node": "GSheets: Clear Bugs (M)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "GSheets: Clear Bugs (M)": {
       "main": [
         [
           {
@@ -788,7 +743,18 @@
         ]
       ]
     },
-    "GSheets: Append Tasks (M)": {
+    "HTTP: Create Bugs Tab": {
+      "main": [
+        [
+          {
+            "node": "GSheets: Clear Bugs (M)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GSheets: Clear Bugs (M)": {
       "main": [
         [
           {
@@ -810,17 +776,6 @@
         ]
       ]
     },
-    "GSheets: Append Bugs (M)": {
-      "main": [
-        [
-          {
-            "node": "Code: Restore Email (M)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Code: Restore Email (M)": {
       "main": [
         [
@@ -828,6 +783,94 @@
             "node": "Send Email via Gmail",
             "type": "main",
             "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code: Build Report Monthly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Merp Opened": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Merp Open End": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP: Bugs Opened": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "HTTP: Bugs Open End": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "HTTP: Todo Tasks (M)": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "HTTP: Tasks Detail": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "HTTP: Bugs Detail": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 6
           }
         ]
       ]
