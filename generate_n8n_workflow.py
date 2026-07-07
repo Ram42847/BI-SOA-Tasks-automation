@@ -3,8 +3,14 @@
 import json, uuid
 from pathlib import Path
 
-SHEET_ID  = '1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q'
+SHEET_ID  = '1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0'
 SHEET_URL = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}'
+
+# Persistent on-disk cache — same file report.py reads/writes, so history survives
+# workflow re-imports/redeploys (n8n's $getWorkflowStaticData resets on those).
+# Must be a path the n8n process itself can read/write. If n8n is self-hosted with
+# N8N_RESTRICT_FILE_ACCESS_TO set, add this directory to that allow-list.
+CACHE_FILE_PATH = '/home/ramlal/mycode/open_project/soa-weekly-report/weekly_data_cache.json'
 
 # ── Code: Setup ───────────────────────────────────────────────────────────────
 JS_SETUP = r"""// Replace YOUR_OP_TOKEN_HERE with your actual OpenProject API token
@@ -72,9 +78,31 @@ return [{ json: {
 }}];
 """
 
+# ── Code: Parse Cache ──────────────────────────────────────────────────────────
+# Reads the binary output of "Read/Write File: Load Cache" and decodes it to text.
+# If the file doesn't exist yet (first-ever run), the disk-read node fails but
+# continueOnFail lets the item through with no binary — we fall back to '{}'.
+JS_PARSE_CACHE = r"""const item = $input.first();
+let cacheRaw = '{}';
+try {
+  const b64 = item && item.binary && item.binary.data && item.binary.data.data;
+  if (b64) cacheRaw = Buffer.from(b64, 'base64').toString('utf-8');
+} catch (e) { /* leave cacheRaw as '{}' */ }
+return [{ json: { cacheRaw } }];
+"""
+
+# ── Code: Prepare Cache File ───────────────────────────────────────────────────
+# Turns the updated cache JSON (produced by Code: Build Report) into binary data
+# so "Read/Write File: Save Cache" can write it to disk.
+JS_PREPARE_CACHE_FILE = r"""const d = $('Code: Build Report').first().json;
+const buffer = Buffer.from(d.cacheOut, 'utf-8');
+const binaryData = await this.helpers.prepareBinaryData(buffer, 'weekly_data_cache.json', 'application/json');
+return [{ json: {}, binary: { data: binaryData } }];
+"""
+
 # ── Code: Build Report ────────────────────────────────────────────────────────
-JS_BUILD = r"""const API_STORY_TYPE_ID  = 15;
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q';
+JS_BUILD = ("const API_STORY_TYPE_ID  = 15;\n"
+            f"const SHEET_URL = '{SHEET_URL}';\n") + r"""
 
 function linkId(links, key) {
   const m = ((links?.[key]?.href) || '').match(/\/(\d+)$/);
@@ -147,13 +175,20 @@ function extractSheetRows(els, weekOf) {
   });
 }
 
-// Rolling 4-week cache (seeded with PDF ground-truth values)
-const staticData = $getWorkflowStaticData('global');
-if (!staticData.cache) {
-  staticData.cache = {
+// Rolling 4-week cache — persisted to disk (weekly_data_cache.json) via the
+// Read/Write File nodes, NOT $getWorkflowStaticData (that resets whenever this
+// workflow is re-imported/redeployed, which is what caused missing weeks before).
+// The seed below is only a one-time bootstrap for a brand-new/empty cache file.
+let cache;
+try {
+  cache = JSON.parse($('Code: Parse Cache').first().json.cacheRaw || '{}');
+} catch (e) { cache = {}; }
+if (!cache || Object.keys(cache).length === 0) {
+  cache = {
     "2026-05-31_2026-06-06": { merp_B:32,merp_C:15,merp_open:124,merp_wip:103,merp_backlog:21,bugs_B:13,bugs_C:18,bugs_open:16,biz_opened:17,int_opened:15,dev_tasks:{} },
     "2026-06-07_2026-06-13": { merp_B:20,merp_C:21,merp_open:123,merp_wip:101,merp_backlog:22,bugs_B:9, bugs_C:13,bugs_open:12,biz_opened:10,int_opened:10,dev_tasks:{} },
-    "2026-06-14_2026-06-20": { merp_B:22,merp_C:38,merp_open:107,merp_wip:92, merp_backlog:15,bugs_B:7, bugs_C:5, bugs_open:14,biz_opened:13,int_opened:9, dev_tasks:{} }
+    "2026-06-14_2026-06-20": { merp_B:22,merp_C:38,merp_open:107,merp_wip:92, merp_backlog:15,bugs_B:7, bugs_C:5, bugs_open:14,biz_opened:13,int_opened:9, dev_tasks:{} },
+    "2026-06-21_2026-06-27": { merp_B:18,merp_C:18,merp_open:107,merp_wip:90, merp_backlog:17,bugs_B:7, bugs_C:9, bugs_open:12,biz_opened:10,int_opened:8, dev_tasks:{} }
   };
 }
 
@@ -167,13 +202,13 @@ function cacheKey(s,e) { return `${toISO(s)}_${toISO(e)}`; }
 const currStart = new Date(ws+'T00:00:00'), currEnd = new Date(we+'T00:00:00');
 const currKey   = cacheKey(currStart, currEnd);
 
-staticData.cache[currKey] = {
+cache[currKey] = {
   merp_B:merpB, merp_open:merpOpenEnd, merp_wip:merpWip, merp_backlog:merpBacklog,
   bugs_B:bugsB, bugs_open:bugsOpenEnd, biz_opened:business, int_opened:internal, dev_tasks:devTasks
 };
 
 const weeks = [3,2,1,0].map(i=>[addDays(currStart,-7*i),addDays(currEnd,-7*i)]);
-const rows  = weeks.map(([s,e])=>({ start:s, end:e, ...(staticData.cache[cacheKey(s,e)]||{}) }));
+const rows  = weeks.map(([s,e])=>({ start:s, end:e, ...(cache[cacheKey(s,e)]||{}) }));
 
 const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const ML=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -188,10 +223,12 @@ for (let i=0;i<rows.length;i++) {
   if (i===3) {
     r.merp_C=r.merp_A+(r.merp_B||0)-(r.merp_open||0);
     r.bugs_C=r.bugs_A+(r.bugs_B||0)-(r.bugs_open||0);
-    staticData.cache[currKey].merp_C=r.merp_C;
-    staticData.cache[currKey].bugs_C=r.bugs_C;
+    cache[currKey].merp_C=r.merp_C;
+    cache[currKey].bugs_C=r.bugs_C;
   }
 }
+
+const cacheOut = JSON.stringify(cache, null, 2);
 
 // HTML generation
 const H='#2E6B73',S='#5F9EA0';
@@ -273,7 +310,7 @@ const sheetBodyBugs  = JSON.stringify({requests:[{addSheet:{properties:{title:sh
 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:Arial,sans-serif;font-size:13px;color:#222;max-width:900px"><p>Hi All,</p><p>Please find the Weekly Task Report of BI-SOA from <strong>${period}</strong>.</p><p><strong>Key Highlights :</strong></p>${hl}${sumT}<p style="margin-top:20px">Please find below the bifurcation of total tickets opened :-</p>${bifT}${devT}<br><p>Please refer below for a detailed tracker.<br><a href="${SHEET_URL}">BI-SOA Detailed Tracker</a></p><br><p><em>Thanks &amp; Regards,<br>BI SOA Automation<br>IndiaMart Intermesh Limited</em></p></body></html>`;
 const subject=`BI Weekly Report :BI SOA Task Status Report : ${period}`;
 
-return [{ json: { html, subject, tasksRows, bugsRows, sheetTabTasks, sheetTabBugs, sheetBodyTasks, sheetBodyBugs } }];
+return [{ json: { html, subject, tasksRows, bugsRows, sheetTabTasks, sheetTabBugs, sheetBodyTasks, sheetBodyBugs, cacheOut } }];
 """
 
 # ── Code: To Task Rows ────────────────────────────────────────────────────────
@@ -400,11 +437,13 @@ def gsheets_dynamic(name, operation, tab_field, pos, continue_on_fail=False):
 #                  CreateTab→Clear→ToRows→Append   CreateTab→Clear→ToRows→Append   Restore→Gmail
 
 IDS = {k: str(uuid.uuid4()) for k in
-       ['manual','schedule','setup','merge','build','toTaskRows','toBugRows','restore','gmail','wf']}
+       ['manual','schedule','setup','merge','build','toTaskRows','toBugRows','restore','gmail','wf',
+        'loadCache','parseCache','prepCache','saveCache']}
 
-# 8 HTTP nodes spread vertically (Y: 50..1240, step 170, centre = 645)
-HTTP_Y = [50 + i * 170 for i in range(8)]
-CENTER_Y = (HTTP_Y[0] + HTTP_Y[-1]) // 2   # 645
+# 8 HTTP nodes + 1 cache-load branch, spread vertically (step 170, centre = 645)
+HTTP_Y = [50 + i * 170 for i in range(9)]
+CENTER_Y = (HTTP_Y[0] + HTTP_Y[-1]) // 2   # 730 -> nearest branch used as merge/build centre
+LOAD_CACHE_Y = HTTP_Y[8]
 
 # Y levels for the 3 post-build paths
 TA_Y = 100          # Tasks path
@@ -425,7 +464,34 @@ setup    = {"id":IDS['setup'],    "name":"Code: Setup",
 merge    = {"id":IDS['merge'],    "name":"Merge",
             "type":"n8n-nodes-base.merge", "typeVersion":3,
             "position":[1180, CENTER_Y],
-            "parameters":{"mode":"append","options":{}}}
+            "parameters":{"mode":"append","numberInputs":9,"options":{}}}
+load_cache  = {"id":IDS['loadCache'], "name":"Read/Write File: Load Cache",
+            "type":"n8n-nodes-base.readWriteFile", "typeVersion":1,
+            "continueOnFail": True,
+            "position":[900, LOAD_CACHE_Y],
+            "parameters":{
+                "operation": "read",
+                "fileSelector": CACHE_FILE_PATH,
+                "options": {"dataPropertyName": "data"}
+            }}
+parse_cache = {"id":IDS['parseCache'], "name":"Code: Parse Cache",
+            "type":"n8n-nodes-base.code", "typeVersion":2,
+            "position":[1180, LOAD_CACHE_Y],
+            "parameters":{"mode":"runOnceForAllItems","jsCode":JS_PARSE_CACHE}}
+prep_cache  = {"id":IDS['prepCache'], "name":"Code: Prepare Cache File",
+            "type":"n8n-nodes-base.code", "typeVersion":2,
+            "position":[1740, LOAD_CACHE_Y],
+            "parameters":{"mode":"runOnceForAllItems","jsCode":JS_PREPARE_CACHE_FILE}}
+save_cache  = {"id":IDS['saveCache'], "name":"Read/Write File: Save Cache",
+            "type":"n8n-nodes-base.readWriteFile", "typeVersion":1,
+            "continueOnFail": True,
+            "position":[2020, LOAD_CACHE_Y],
+            "parameters":{
+                "operation": "write",
+                "fileName": CACHE_FILE_PATH,
+                "dataPropertyName": "data",
+                "options": {}
+            }}
 build    = {"id":IDS['build'],    "name":"Code: Build Report",
             "type":"n8n-nodes-base.code", "typeVersion":2,
             "position":[1460, CENTER_Y],
@@ -478,7 +544,7 @@ append_bugs  = gsheets_dynamic("GSheets: Append Bugs",  "append", "sheetTabBugs"
 all_nodes = (
     [manual, schedule, setup]
     + http_nodes
-    + [merge, build,
+    + [load_cache, parse_cache, merge, build, prep_cache, save_cache,
        create_tasks, clear_tasks, to_tasks, append_tasks,
        create_bugs,  clear_bugs,  to_bugs,  append_bugs,
        restore, gmail]
@@ -488,16 +554,21 @@ all_nodes = (
 conns = {
     "Manual Trigger":   {"main": [[{"node":"Code: Setup","type":"main","index":0}]]},
     "Schedule Trigger": {"main": [[{"node":"Code: Setup","type":"main","index":0}]]},
-    # Setup → all 8 HTTP nodes in parallel (one output, 8 targets)
+    # Setup → all 8 HTTP nodes + the cache-file read, in parallel (9 targets)
     "Code: Setup": {"main": [[
-        {"node": n["name"], "type": "main", "index": 0} for n in http_nodes
+        *({"node": n["name"], "type": "main", "index": 0} for n in http_nodes),
+        {"node": "Read/Write File: Load Cache", "type": "main", "index": 0},
     ]]},
-    # Build Report → 3 independent parallel paths
+    "Read/Write File: Load Cache": {"main": [[{"node":"Code: Parse Cache","type":"main","index":0}]]},
+    "Code: Parse Cache": {"main": [[{"node":"Merge","type":"main","index":8}]]},
+    # Build Report → 3 existing parallel paths + persist the updated cache to disk
     "Code: Build Report": {"main": [[
         {"node": "HTTP: Create Tasks Tab", "type": "main", "index": 0},
         {"node": "HTTP: Create Bugs Tab",  "type": "main", "index": 0},
         {"node": "Code: Restore Email",    "type": "main", "index": 0},
+        {"node": "Code: Prepare Cache File", "type": "main", "index": 0},
     ]]},
+    "Code: Prepare Cache File": {"main": [[{"node":"Read/Write File: Save Cache","type":"main","index":0}]]},
     # Tasks path
     "HTTP: Create Tasks Tab": {"main": [[{"node":"GSheets: Clear Tasks", "type":"main","index":0}]]},
     "GSheets: Clear Tasks":   {"main": [[{"node":"Code: To Task Rows",   "type":"main","index":0}]]},

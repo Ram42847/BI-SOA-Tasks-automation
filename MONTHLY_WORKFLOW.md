@@ -1,9 +1,28 @@
 # Monthly SOA Report — n8n Workflow Documentation
 
 **Workflow file:** `n8n_monthly_workflow.json`  
-**Total nodes:** 22 (including 1 Merge node)  
+**Total nodes:** 26 (including 1 Merge node)  
 **Trigger:** Manual or Scheduled (1st of every month at 8:00 PM)  
 **Output:** HTML email via Gmail + rows written to Google Sheets (dynamic tab per month)
+
+## Cache persistence (fixed)
+
+The rolling 4-month cache used to live in n8n's in-memory `$getWorkflowStaticData`,
+seeded with 3 hardcoded historical months. Every time this workflow file got
+regenerated/re-imported into n8n, that in-memory data reset to the hardcoded
+seed, silently losing any month that had rolled past it — the same bug fixed in
+the weekly report workflow, just on a monthly cadence.
+
+The cache now lives in `monthly_data_cache.json` on disk via two new
+`Read/Write Files from Disk` nodes (`Read/Write File: Load Cache (M)` /
+`Read/Write File: Save Cache (M)`). This survives workflow re-imports because
+the data no longer lives inside the workflow object at all.
+
+**Setup requirement:** n8n must be able to read/write
+`/home/ramlal/mycode/open_project/soa-weekly-report/monthly_data_cache.json` on
+disk. If self-hosted n8n has `N8N_RESTRICT_FILE_ACCESS_TO` set, add this
+directory to that allow-list (n8n Cloud doesn't support disk access at all —
+this workflow requires self-hosted n8n on the same host as this repo).
 
 ---
 
@@ -13,31 +32,31 @@
 [Manual Trigger] ──┐
                    ├──→ [1] Code: Setup Monthly
 [Schedule Trigger]─┘         │
-                              │  (fans out — all 7 HTTP calls fire in parallel)
-                    ┌─────────┴────────────────────────────────┐
-                    ↓         ↓         ↓        ↓        ↓    ↓    ↓
-              [2] HTTP:  [3] HTTP:  [4] HTTP: [5] HTTP: [6] HTTP: [7] HTTP: [8] HTTP:
-              Merp       Merp       Bugs      Bugs      Todo      Tasks     Bugs
-              Opened     Open End   Opened    Open End  Tasks(M)  Detail    Detail
-                    │         │         │        │        │         │         │
-                    └─────────┴─────────┴────────┴────────┴─────────┴─────────┘
+                              │  (fans out — 7 HTTP calls + 1 cache-file read, all in parallel)
+                    ┌─────────┴──────────────────────────────────────────┐
+                    ↓         ↓         ↓        ↓        ↓    ↓    ↓    ↓
+              [2] HTTP:  [3] HTTP:  [4] HTTP: [5] HTTP: [6] HTTP: [7] HTTP: [8] HTTP: [9] Read/Write File:
+              Merp       Merp       Bugs      Bugs      Todo      Tasks     Bugs          Load Cache (M)
+              Opened     Open End   Opened    Open End  Tasks(M)  Detail    Detail          │
+                    │         │         │        │        │         │         │       [10] Code: Parse Cache (M)
+                    └─────────┴─────────┴────────┴────────┴─────────┴─────────┴──────────────┘
                                               │
-                                   [9] Merge (waits for all 7)
+                                   [11] Merge (waits for all 8)
                                               │
-                              [10] Code: Build Report Monthly
+                              [12] Code: Build Report Monthly
                                               │
-                          ┌───────────────────┼───────────────────┐
-                          │                   │                   │
-                    Tasks path           Bugs path          Email path
-                          │                   │                   │
-              [11] HTTP: Create     [15] HTTP: Create   [19] Code: Restore
-                   Tasks Tab             Bugs Tab             Email (M)
-                          │                   │                   │
-              [12] GSheets:         [16] GSheets:       [20] Send Email
-                   Clear Tasks(M)        Clear Bugs(M)        via Gmail
-                          │                   │
-              [13] Code:            [17] Code:
-                   To Task Rows(M)       To Bug Rows(M)
+                    ┌───────────────────┬─────┴─────────────┬───────────────────┐
+                    │                   │                   │                   │
+              Tasks path           Bugs path          Email path         Cache-save path
+                    │                   │                   │                   │
+        [13] HTTP: Create     [17] HTTP: Create   [21] Code: Restore   [23] Code: Prepare
+             Tasks Tab             Bugs Tab             Email (M)            Cache File (M)
+                    │                   │                   │                   │
+        [14] GSheets:         [18] GSheets:       [22] Send Email    [24] Read/Write File:
+             Clear Tasks(M)        Clear Bugs(M)        via Gmail          Save Cache (M)
+                    │                   │
+        [15] Code:            [19] Code:
+             To Task Rows(M)       To Bug Rows(M)
                           │                   │
               [14] GSheets:         [18] GSheets:
                    Append Tasks(M)       Append Bugs(M)
@@ -223,21 +242,21 @@ filters = [
 
 ---
 
-### Node 9 — `Merge`
+### Node 11 — `Merge`
 **Type:** Merge (mode: append)
 
 **What it does:**
-- Waits until **all 7 HTTP nodes** have completed (each connects to a separate input index 0–6)
+- Waits until **all 7 HTTP nodes + the cache-file read** have completed (each connects to a separate input index 0–7, `numberInputs: 8`)
 - Combines all their output items into one batch
 - Fires once to trigger `Code: Build Report Monthly`
 
-**Why needed:** With 7 parallel HTTP calls, Build Report must not start until all 7 have finished. The Merge node is the synchronisation point.
+**Why needed:** With 7 parallel HTTP calls plus the disk cache read, Build Report must not start until all 8 have finished. The Merge node is the synchronisation point.
 
 **Output → Code: Build Report Monthly**
 
 ---
 
-### Node 10 — `Code: Build Report Monthly`
+### Node 12 — `Code: Build Report Monthly`
 **Type:** Code (JavaScript, runOnceForAllItems)
 
 **What it does:**
@@ -256,11 +275,12 @@ Reads all 7 HTTP node responses (via `$('HTTP: ...')` references) and computes a
 | `business` | HTTP: Merp Opened | count where type = Story (ID 15) | Business Tickets (B) |
 | `internal` | — | `merpB − business` | Internally Opened Tickets (C) |
 
-**Rolling 4-month cache** (`$getWorkflowStaticData('global').mcache`):
+**Rolling 4-month cache** (persisted on disk in `monthly_data_cache.json`, read via `Code: Parse Cache (M)`):
 - Key format: `"2026-06"` (YYYY-MM)
 - Saves current month; reads prior 3 months to build the 4-column table
 - Derives `merp_A` (open at month start) and calculates `merp_C` (closed = A + B − open_end)
-- Pre-seeded with Mar, Apr, May 2026 values
+- Falls back to a hardcoded Mar/Apr/May 2026 seed only if the disk cache file is completely empty (first-ever run)
+- Also emits `cacheOut` (the updated cache as a JSON string), consumed by `Code: Prepare Cache File (M)` → `Read/Write File: Save Cache (M)` to persist it back to disk
 
 **Dynamic sheet tab names (change every month):**
 - `sheetTabTasks` = e.g. `"Tasks Jun2026"`
@@ -461,6 +481,12 @@ A new pair of tabs is created automatically each month. Tab names include the mo
 
 ## Cache Structure
 
+Persisted on disk at `monthly_data_cache.json` (read/written by the
+`Read/Write File: Load Cache (M)` / `Read/Write File: Save Cache (M)` nodes),
+**not** `$getWorkflowStaticData` — that in-memory store resets on every
+workflow re-import/redeploy, which used to silently drop months from the
+rolling window.
+
 ```json
 {
   "2026-03": { "merp_B": 64, "merp_C": 29, "merp_open": 206, "merp_wip": 124, "merp_backlog": 82,
@@ -471,4 +497,8 @@ A new pair of tabs is created automatically each month. Tab names include the mo
 }
 ```
 
-Keeps the **4 most recent months**. Slides forward each run. Pre-seeded with Mar, Apr, May 2026.
+Every month a new key is appended (nothing is pruned). The workflow only ever
+reads the last 4 keys it needs to build the table. Seeded with the Mar/Apr/May
+2026 values matching the manual ground-truth report; the in-code hardcoded
+seed is only a bootstrap fallback used if the disk file is ever completely
+empty.

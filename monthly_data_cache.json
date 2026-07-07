@@ -1,0 +1,5 @@
+{
+  "2026-03": { "merp_B": 64, "merp_C": 29, "merp_open": 206, "merp_wip": 124, "merp_backlog": 82, "bugs_B": 24, "bugs_C": 10, "bugs_open": 30, "biz_opened": 11, "int_opened": 53 },
+  "2026-04": { "merp_B": 74, "merp_C": 99, "merp_open": 181, "merp_wip": 95,  "merp_backlog": 86, "bugs_B": 24, "bugs_C": 25, "bugs_open": 29, "biz_opened": 35, "int_opened": 39 },
+  "2026-05": { "merp_B": 96, "merp_C": 170, "merp_open": 107, "merp_wip": 88, "merp_backlog": 19, "bugs_B": 40, "bugs_C": 10, "bugs_open": 21, "biz_opened": 46, "int_opened": 50 }
+}

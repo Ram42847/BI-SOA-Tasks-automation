@@ -1,9 +1,30 @@
 # Weekly SOA Report — n8n Workflow Documentation
 
 **Workflow file:** `n8n_workflow.json`  
-**Total nodes:** 23 (including 1 Merge node)  
+**Total nodes:** 27 (including 1 Merge node)  
 **Trigger:** Manual or Scheduled (every Sunday at 8:00 PM)  
 **Output:** HTML email via Gmail + rows written to Google Sheets
+
+## Cache persistence (fixed)
+
+The rolling 4-week cache used to live in n8n's in-memory `$getWorkflowStaticData`,
+seeded with 3 hardcoded historical weeks. Every time this workflow file got
+regenerated/re-imported into n8n, that in-memory data reset to the hardcoded
+seed, silently losing any week that had rolled past it — that's what caused the
+"21 Jun - 27 Jun" column to render as all zeros (and cascade into a wrong current
+week too).
+
+The cache now lives in `weekly_data_cache.json` on disk — the **same file**
+`report.py` already reads/writes — via two new `Read/Write Files from Disk`
+nodes (`Read/Write File: Load Cache` / `Read/Write File: Save Cache`). This
+survives workflow re-imports because the data no longer lives inside the
+workflow object at all.
+
+**Setup requirement:** n8n must be able to read/write
+`/home/ramlal/mycode/open_project/soa-weekly-report/weekly_data_cache.json` on
+disk. If self-hosted n8n has `N8N_RESTRICT_FILE_ACCESS_TO` set, add this
+directory to that allow-list (n8n Cloud doesn't support disk access at all —
+this workflow requires self-hosted n8n on the same host as this repo).
 
 ---
 
@@ -13,31 +34,31 @@
 [Manual Trigger] ──┐
                    ├──→ [1] Code: Setup
 [Schedule Trigger]─┘         │
-                              │  (fans out — all 8 HTTP calls fire in parallel)
-                    ┌─────────┴──────────────────────────────────────┐
-                    ↓         ↓         ↓        ↓        ↓    ...   ↓
-              [2] HTTP:  [3] HTTP:  [4] HTTP: [5] HTTP: [6] HTTP: [7] HTTP: [8] HTTP: [9] HTTP:
-              Merp       Merp       Bugs      Bugs      Dev       Todo      Tasks     Bugs
-              Opened     Open End   Opened    Open End  Tasks     Tasks     Detail    Detail
-                    │         │         │        │        │         │         │         │
-                    └─────────┴─────────┴────────┴────────┴─────────┴─────────┴─────────┘
+                              │  (fans out — 8 HTTP calls + 1 cache-file read, all in parallel)
+                    ┌─────────┴───────────────────────────────────────────────┐
+                    ↓         ↓         ↓        ↓        ↓    ...   ↓        ↓
+              [2] HTTP:  [3] HTTP:  [4] HTTP: [5] HTTP: [6] HTTP: [7] HTTP: [8] HTTP: [9] HTTP:  [10] Read/Write File:
+              Merp       Merp       Bugs      Bugs      Dev       Todo      Tasks     Bugs            Load Cache
+              Opened     Open End   Opened    Open End  Tasks     Tasks     Detail    Detail           │
+                    │         │         │        │        │         │         │         │       [11] Code: Parse Cache
+                    └─────────┴─────────┴────────┴────────┴─────────┴─────────┴─────────┴──────────────┘
                                               │
-                                    [10] Merge (waits for all 8)
+                                    [12] Merge (waits for all 9)
                                               │
-                                   [11] Code: Build Report
+                                   [13] Code: Build Report
                                               │
-                          ┌───────────────────┼───────────────────┐
-                          │                   │                   │
-                    Tasks path           Bugs path          Email path
-                          │                   │                   │
-              [12] HTTP: Create     [16] HTTP: Create   [20] Code: Restore
-                   Tasks Tab             Bugs Tab             Email
-                          │                   │                   │
-              [13] GSheets:         [17] GSheets:       [21] Send Email
-                   Clear Tasks           Clear Bugs           via Gmail
-                          │                   │
-              [14] Code:            [18] Code:
-                   To Task Rows          To Bug Rows
+                    ┌───────────────────┬─────┴─────────────┬───────────────────┐
+                    │                   │                   │                   │
+              Tasks path           Bugs path          Email path         Cache-save path
+                    │                   │                   │                   │
+        [14] HTTP: Create   [18] HTTP: Create   [22] Code: Restore   [24] Code: Prepare
+             Tasks Tab           Bugs Tab             Email                Cache File
+                    │                   │                   │                   │
+        [15] GSheets:         [19] GSheets:       [23] Send Email    [25] Read/Write File:
+             Clear Tasks           Clear Bugs           via Gmail          Save Cache
+                    │                   │
+        [16] Code:            [20] Code:
+             To Task Rows          To Bug Rows
                           │                   │
               [15] GSheets:         [19] GSheets:
                    Append Tasks          Append Bugs
@@ -243,11 +264,11 @@ filters = [
 **Type:** Merge (mode: append)
 
 **What it does:**
-- Waits until **all 8 HTTP nodes** have completed (each connects to a separate input index 0–7)
+- Waits until **all 8 HTTP nodes + the cache-file read** have completed (each connects to a separate input index 0–8, `numberInputs: 9`)
 - Combines all their output items into one batch
 - Fires once to trigger `Code: Build Report`
 
-**Why needed:** With 8 parallel HTTP calls, Build Report must not start until all 8 have finished. The Merge node is the synchronisation point.
+**Why needed:** With 9 parallel branches, Build Report must not start until all of them have finished. The Merge node is the synchronisation point.
 
 **Output → Code: Build Report**
 
@@ -272,10 +293,11 @@ Reads all 8 HTTP node responses (via `$('HTTP: ...')` references) and computes a
 | `business` | HTTP: Merp Opened | count where type = Story (ID 15) | Business Tickets (B) |
 | `internal` | — | `merpB − business` | Internally Opened Tickets (C) |
 
-**Rolling 4-week cache** (`$getWorkflowStaticData('global').cache`):
+**Rolling 4-week cache** (persisted to `weekly_data_cache.json` on disk, read via `Code: Parse Cache` / written via `Code: Prepare Cache File` → `Read/Write File: Save Cache`):
 - Key format: `"2026-06-22_2026-06-28"`
 - Saves current week; reads prior 3 weeks to build the 4-column table
 - Derives `merp_A` (open at week start) and calculates `merp_C` (closed = A + B − open_end)
+- If the cache file is empty/missing (brand-new deployment), falls back to a one-time hardcoded seed of 3 historical weeks
 
 **Developer table:** Groups HTTP: Dev Tasks results by Assignee + Accountable, deduplicates, sorts alphabetically.
 
@@ -456,6 +478,9 @@ Runs in parallel with Path A and Path B after Build Report. Does not wait for sh
 
 ## Cache Structure
 
+Stored in `weekly_data_cache.json` on disk (the same file `report.py` uses) —
+**not** in n8n's workflow static data, which resets on every re-import/redeploy.
+
 ```json
 {
   "2026-06-08_2026-06-14": {
@@ -468,4 +493,8 @@ Runs in parallel with Path A and Path B after Build Report. Does not wait for sh
 }
 ```
 
-Keeps the **4 most recent weeks**. Slides forward each run.
+Every run reads the file (`Read/Write File: Load Cache` → `Code: Parse Cache`),
+adds/overwrites the current week's key, and writes the whole thing back
+(`Code: Prepare Cache File` → `Read/Write File: Save Cache`). Old weeks are
+never deleted, so the file grows slowly over time — the report itself only
+ever displays the 4 most recent weeks.

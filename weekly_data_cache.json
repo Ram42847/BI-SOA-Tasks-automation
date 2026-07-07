@@ -39,14 +39,14 @@
     "dev_tasks": {}
   },
   "2026-06-21_2026-06-27": {
-    "merp_B": 16,
-    "merp_open": 112,
-    "merp_wip": 91,
-    "merp_backlog": 21,
+    "merp_B": 18,
+    "merp_open": 107,
+    "merp_wip": 90,
+    "merp_backlog": 17,
     "bugs_B": 7,
-    "bugs_open": 15,
-    "biz_opened": 9,
-    "int_opened": 7,
+    "bugs_open": 12,
+    "biz_opened": 10,
+    "int_opened": 8,
     "dev_tasks": {
       "Aman Kumar": [
         {
@@ -717,7 +717,7 @@
         }
       ]
     },
-    "merp_C": 11,
-    "bugs_C": 6
+    "merp_C": 18,
+    "bugs_C": 9
   }
 }

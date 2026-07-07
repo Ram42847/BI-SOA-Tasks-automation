@@ -3,8 +3,14 @@
 import json, uuid
 from pathlib import Path
 
-SHEET_ID  = '1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q'
+SHEET_ID  = '1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0'
 SHEET_URL = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}'
+
+# Persistent on-disk cache — survives workflow re-imports/redeploys, unlike
+# $getWorkflowStaticData which resets on those (root cause of the weekly-report
+# bug this mirrors). Must be a path the n8n process itself can read/write; if
+# self-hosted n8n has N8N_RESTRICT_FILE_ACCESS_TO set, allow-list this directory.
+CACHE_FILE_PATH = '/home/ramlal/mycode/open_project/soa-weekly-report/monthly_data_cache.json'
 
 # ── Code: Setup Monthly ───────────────────────────────────────────────────────
 JS_SETUP = r"""// Replace YOUR_OP_TOKEN_HERE with your actual OpenProject API token
@@ -68,9 +74,26 @@ return [{ json: {
 }}];
 """
 
+# ── Code: Parse Cache (M) ──────────────────────────────────────────────────────
+JS_PARSE_CACHE = r"""const item = $input.first();
+let cacheRaw = '{}';
+try {
+  const b64 = item && item.binary && item.binary.data && item.binary.data.data;
+  if (b64) cacheRaw = Buffer.from(b64, 'base64').toString('utf-8');
+} catch (e) { /* leave cacheRaw as '{}' */ }
+return [{ json: { cacheRaw } }];
+"""
+
+# ── Code: Prepare Cache File (M) ───────────────────────────────────────────────
+JS_PREPARE_CACHE_FILE = r"""const d = $('Code: Build Report Monthly').first().json;
+const buffer = Buffer.from(d.cacheOut, 'utf-8');
+const binaryData = await this.helpers.prepareBinaryData(buffer, 'monthly_data_cache.json', 'application/json');
+return [{ json: {}, binary: { data: binaryData } }];
+"""
+
 # ── Code: Build Report Monthly ────────────────────────────────────────────────
-JS_BUILD = r"""const API_STORY_TYPE_ID  = 15;
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1fOoMgQKUIxjtIAMei3u073epQqHIf9omAkaVcu_512Q';
+JS_BUILD = ("const API_STORY_TYPE_ID  = 15;\n"
+            f"const SHEET_URL = '{SHEET_URL}';\n") + r"""
 
 function linkId(links, key) {
   const m = ((links?.[key]?.href)||'').match(/\/(\d+)$/);
@@ -120,10 +143,16 @@ function extractSheetRows(els, monthLabel) {
   });
 }
 
-// Rolling 4-month cache (seeded with PDF ground-truth values)
-const staticData = $getWorkflowStaticData('global');
-if (!staticData.mcache) {
-  staticData.mcache = {
+// Rolling 4-month cache — persisted to disk (monthly_data_cache.json) via the
+// Read/Write File nodes, NOT $getWorkflowStaticData (that resets whenever this
+// workflow is re-imported/redeployed — the same bug fixed in the weekly report).
+// The seed below is only a one-time bootstrap for a brand-new/empty cache file.
+let cache;
+try {
+  cache = JSON.parse($('Code: Parse Cache (M)').first().json.cacheRaw || '{}');
+} catch (e) { cache = {}; }
+if (!cache || Object.keys(cache).length === 0) {
+  cache = {
     "2026-03": { merp_B:64, merp_C:29, merp_open:206, merp_wip:124, merp_backlog:82, bugs_B:24, bugs_C:10, bugs_open:30,  biz_opened:11, int_opened:53 },
     "2026-04": { merp_B:74, merp_C:99, merp_open:181, merp_wip:95,  merp_backlog:86, bugs_B:24, bugs_C:25, bugs_open:29,  biz_opened:35, int_opened:39 },
     "2026-05": { merp_B:96, merp_C:170,merp_open:107, merp_wip:88,  merp_backlog:19, bugs_B:40, bugs_C:10, bugs_open:21,  biz_opened:46, int_opened:50 },
@@ -135,7 +164,7 @@ const ms_iso   = setup.monthStart, me_iso = setup.monthEnd;
 const currMs   = new Date(ms_iso+'T00:00:00');
 const currKey  = ms_iso.slice(0,7);   // "2026-05"
 
-staticData.mcache[currKey] = {
+cache[currKey] = {
   merp_B:merpB, merp_open:merpOpenEnd, merp_wip:merpWip, merp_backlog:merpBacklog,
   bugs_B:bugsB, bugs_open:bugsOpenEnd, biz_opened:business, int_opened:internal,
 };
@@ -148,7 +177,7 @@ const months4 = [3,2,1,0].map(i => {
 });
 const rows = months4.map(([s,e]) => {
   const k = `${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,'0')}`;
-  return { start:s, end:e, ...(staticData.mcache[k]||{}) };
+  return { start:s, end:e, ...(cache[k]||{}) };
 });
 
 for (let i=0;i<rows.length;i++) {
@@ -165,10 +194,12 @@ for (let i=0;i<rows.length;i++) {
   if (i===3) {
     r.merp_C = r.merp_A+(r.merp_B||0)-(r.merp_open||0);
     r.bugs_C  = r.bugs_A+(r.bugs_B||0)-(r.bugs_open||0);
-    staticData.mcache[currKey].merp_C = r.merp_C;
-    staticData.mcache[currKey].bugs_C  = r.bugs_C;
+    cache[currKey].merp_C = r.merp_C;
+    cache[currKey].bugs_C  = r.bugs_C;
   }
 }
+
+const cacheOut = JSON.stringify(cache, null, 2);
 
 const MS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const ML = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -243,7 +274,7 @@ const bugsRows  = extractSheetRows(bugsDetailEls,  monthLabel);
 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:Arial,sans-serif;font-size:13px;color:#222;max-width:900px"><p>Hi All,</p><p>Please find the Monthly Task Report of BI-SOA from <strong>${period}</strong>.</p><p><strong><u>Key Highlights :</u></strong></p>${hl}${sumT}<p style="margin-top:20px">Please find below the bifurcation of total tickets opened :-</p>${bifT}<br><p>Please refer below for a detailed tracker.<br><a href="${SHEET_URL}">BI-SOA Detailed Tracker</a></p><br><p><em>Thanks &amp; Regards,<br>BI SOA Automation<br>IndiaMart Intermesh Limited</em></p></body></html>`;
 const subject=`BI Monthly Report :BI SOA Task Status Report : ${ML[currMs.getMonth()]} ${monthYear}`;
 
-return [{ json: { html, subject, tasksRows, bugsRows, sheetTabTasks, sheetTabBugs, sheetBodyTasks, sheetBodyBugs } }];
+return [{ json: { html, subject, tasksRows, bugsRows, sheetTabTasks, sheetTabBugs, sheetBodyTasks, sheetBodyBugs, cacheOut } }];
 """
 
 # ── Code: To Task Rows ────────────────────────────────────────────────────────
@@ -349,18 +380,20 @@ def gsheets_dynamic(name, operation, tab_field, pos, continue_on_fail=False):
 # ── Build workflow ────────────────────────────────────────────────────────────
 # Parallel architecture:
 #
-#   Triggers → Setup Monthly → [7 HTTP nodes in parallel] → Merge → Build Report Monthly
-#                                                                          ↓
-#                              ┌────────────────────────────────────────────┼──────────────────────────┐
-#                         Tasks path                                   Bugs path                Email path
-#                 CreateTab→Clear→ToRows→Append               CreateTab→Clear→ToRows→Append   Restore→Gmail
+#   Triggers → Setup Monthly → [7 HTTP nodes + cache-file read in parallel] → Merge → Build Report Monthly
+#                                                                                            ↓
+#                              ┌────────────────────────────────┬─────────────────────────────┼──────────────────────────┐
+#                         Tasks path                        Bugs path                   Cache-save path              Email path
+#                 CreateTab→Clear→ToRows→Append   CreateTab→Clear→ToRows→Append   PrepFile→WriteFile           Restore→Gmail
 
 IDS = {k: str(uuid.uuid4()) for k in
-       ['manual','schedule','setup','merge','build','toTaskRows','toBugRows','restore','gmail','wf']}
+       ['manual','schedule','setup','merge','build','toTaskRows','toBugRows','restore','gmail','wf',
+        'loadCache','parseCache','prepCache','saveCache']}
 
-# 7 HTTP nodes spread vertically (Y: 50..1070, step 170, centre = 560)
-HTTP_Y = [50 + i * 170 for i in range(7)]
-CENTER_Y = (HTTP_Y[0] + HTTP_Y[-1]) // 2   # 560
+# 7 HTTP nodes + 1 cache-load branch, spread vertically (step 170, centre = 645)
+HTTP_Y = [50 + i * 170 for i in range(8)]
+CENTER_Y = (HTTP_Y[0] + HTTP_Y[-1]) // 2
+LOAD_CACHE_Y = HTTP_Y[7]
 
 # Y levels for the 3 post-build paths
 TA_Y = 100          # Tasks path
@@ -383,7 +416,34 @@ setup    = {"id":IDS['setup'],    "name":"Code: Setup Monthly",
 merge    = {"id":IDS['merge'],    "name":"Merge",
             "type":"n8n-nodes-base.merge", "typeVersion":3,
             "position":[1100, CENTER_Y],
-            "parameters":{"mode":"append","options":{}}}
+            "parameters":{"mode":"append","numberInputs":8,"options":{}}}
+load_cache  = {"id":IDS['loadCache'], "name":"Read/Write File: Load Cache (M)",
+            "type":"n8n-nodes-base.readWriteFile", "typeVersion":1,
+            "continueOnFail": True,
+            "position":[900, LOAD_CACHE_Y],
+            "parameters":{
+                "operation": "read",
+                "fileSelector": CACHE_FILE_PATH,
+                "options": {"dataPropertyName": "data"}
+            }}
+parse_cache = {"id":IDS['parseCache'], "name":"Code: Parse Cache (M)",
+            "type":"n8n-nodes-base.code", "typeVersion":2,
+            "position":[1100, LOAD_CACHE_Y],
+            "parameters":{"mode":"runOnceForAllItems","jsCode":JS_PARSE_CACHE}}
+prep_cache  = {"id":IDS['prepCache'], "name":"Code: Prepare Cache File (M)",
+            "type":"n8n-nodes-base.code", "typeVersion":2,
+            "position":[1660, LOAD_CACHE_Y],
+            "parameters":{"mode":"runOnceForAllItems","jsCode":JS_PREPARE_CACHE_FILE}}
+save_cache  = {"id":IDS['saveCache'], "name":"Read/Write File: Save Cache (M)",
+            "type":"n8n-nodes-base.readWriteFile", "typeVersion":1,
+            "continueOnFail": True,
+            "position":[1940, LOAD_CACHE_Y],
+            "parameters":{
+                "operation": "write",
+                "fileName": CACHE_FILE_PATH,
+                "dataPropertyName": "data",
+                "options": {}
+            }}
 build    = {"id":IDS['build'],    "name":"Code: Build Report Monthly",
             "type":"n8n-nodes-base.code", "typeVersion":2,
             "position":[1380, CENTER_Y],
@@ -435,7 +495,7 @@ append_bugs  = gsheets_dynamic("GSheets: Append Bugs (M)",  "append", "sheetTabB
 all_nodes = (
     [manual, schedule, setup]
     + http_op_nodes
-    + [merge, build,
+    + [load_cache, parse_cache, merge, build, prep_cache, save_cache,
        create_tasks, clear_tasks, to_tasks, append_tasks,
        create_bugs,  clear_bugs,  to_bugs,  append_bugs,
        restore, gmail]
@@ -445,16 +505,21 @@ all_nodes = (
 conns = {
     "Manual Trigger":   {"main": [[{"node":"Code: Setup Monthly","type":"main","index":0}]]},
     "Schedule Trigger": {"main": [[{"node":"Code: Setup Monthly","type":"main","index":0}]]},
-    # Setup → all 7 HTTP nodes in parallel
+    # Setup → all 7 HTTP nodes + the cache-file read, in parallel (8 targets)
     "Code: Setup Monthly": {"main": [[
-        {"node": n["name"], "type": "main", "index": 0} for n in http_op_nodes
+        *({"node": n["name"], "type": "main", "index": 0} for n in http_op_nodes),
+        {"node": "Read/Write File: Load Cache (M)", "type": "main", "index": 0},
     ]]},
-    # Build Report → 3 independent parallel paths
+    "Read/Write File: Load Cache (M)": {"main": [[{"node":"Code: Parse Cache (M)","type":"main","index":0}]]},
+    "Code: Parse Cache (M)": {"main": [[{"node":"Merge","type":"main","index":7}]]},
+    # Build Report → 3 existing parallel paths + persist the updated cache to disk
     "Code: Build Report Monthly": {"main": [[
         {"node": "HTTP: Create Tasks Tab",  "type": "main", "index": 0},
         {"node": "HTTP: Create Bugs Tab",   "type": "main", "index": 0},
         {"node": "Code: Restore Email (M)", "type": "main", "index": 0},
+        {"node": "Code: Prepare Cache File (M)", "type": "main", "index": 0},
     ]]},
+    "Code: Prepare Cache File (M)": {"main": [[{"node":"Read/Write File: Save Cache (M)","type":"main","index":0}]]},
     # Tasks path
     "HTTP: Create Tasks Tab":  {"main": [[{"node":"GSheets: Clear Tasks (M)", "type":"main","index":0}]]},
     "GSheets: Clear Tasks (M)":{"main": [[{"node":"Code: To Task Rows (M)",   "type":"main","index":0}]]},
