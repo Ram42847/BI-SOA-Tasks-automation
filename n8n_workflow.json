@@ -1,13 +1,13 @@
 {
   "name": "SOA Weekly Report",
-  "id": "20a9555d-c32a-46e6-8c50-c326dd683207",
+  "id": "fde658a6-582c-4179-a771-ab1c4f72c189",
   "active": false,
   "settings": {
     "executionOrder": "v1"
   },
   "nodes": [
     {
-      "id": "1974fb32-2c33-4d50-ba45-d7cb3da7428f",
+      "id": "dcb48834-190f-44d4-a68d-969138e1d522",
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
@@ -18,7 +18,7 @@
       "parameters": {}
     },
     {
-      "id": "800ded92-1183-45e0-b921-10aa4e2f68f3",
+      "id": "a176280b-b0b8-4b46-b10a-b0ad93d7e966",
       "name": "Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -38,7 +38,7 @@
       }
     },
     {
-      "id": "d4955c70-5571-4c6b-b070-3f0bb64880e6",
+      "id": "9df92411-c41d-4847-9b3d-b14e72f5654d",
       "name": "Code: Setup",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -52,7 +52,7 @@
       }
     },
     {
-      "id": "9d5b7df7-e965-4611-a32b-561633ab66a1",
+      "id": "31ac5e4a-a371-476a-a8f4-3d71f0b58246",
       "name": "HTTP: Merp Opened",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -94,7 +94,7 @@
       }
     },
     {
-      "id": "9c9d8042-3d5a-4665-9aee-f157145ba74b",
+      "id": "194375ec-4b1f-4390-ad24-7c285c3476fd",
       "name": "HTTP: Merp Open End",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -136,7 +136,7 @@
       }
     },
     {
-      "id": "9fba4807-15a5-4a7d-8d59-33f9f1183e03",
+      "id": "c9439e0c-4581-41a9-a554-ce75e5c94767",
       "name": "HTTP: Bugs Opened",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -178,7 +178,7 @@
       }
     },
     {
-      "id": "913ffc56-f449-4a05-aab2-9e00c60d6912",
+      "id": "58ed16c6-21c3-40e5-86ed-0b8b2a903a25",
       "name": "HTTP: Bugs Open End",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -220,7 +220,7 @@
       }
     },
     {
-      "id": "c91fbec0-1ca9-4a08-b7d9-ef0908115379",
+      "id": "9c65a309-3516-4a00-ad66-45e0f090d10c",
       "name": "HTTP: Dev Tasks",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -262,7 +262,7 @@
       }
     },
     {
-      "id": "23f88e39-b239-4102-baf9-c9f39c942c41",
+      "id": "08d49ca0-cdd7-4e4a-9897-d6294f0b5d88",
       "name": "HTTP: Todo Tasks",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -304,7 +304,7 @@
       }
     },
     {
-      "id": "ce1a5e5d-5e4f-4068-9479-1b4e4b2596d7",
+      "id": "c45c199c-1859-4e68-b361-704e26cdb457",
       "name": "HTTP: Tasks Detail",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -346,7 +346,7 @@
       }
     },
     {
-      "id": "3cd60f82-a3a1-4e89-997d-24b1b6b3a1e8",
+      "id": "81294220-7a85-476f-b203-62373294c1b1",
       "name": "HTTP: Bugs Detail",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -388,7 +388,7 @@
       }
     },
     {
-      "id": "731f694d-6d70-4fc8-ad7e-757dc64a518f",
+      "id": "973334ec-855b-43be-abd3-8f6a7ef6a4a6",
       "name": "Read/Write File: Load Cache",
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
@@ -406,7 +406,7 @@
       }
     },
     {
-      "id": "925f44b9-fb41-482b-8278-84819eae42c3",
+      "id": "7967bdaf-74fd-400a-943a-7e9ba83c5358",
       "name": "Code: Parse Cache",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -420,7 +420,7 @@
       }
     },
     {
-      "id": "68c9c87a-ce92-4a61-9794-2fe038908096",
+      "id": "26019fd7-669e-4522-84ac-0a413e2684c9",
       "name": "Merge",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
@@ -435,7 +435,7 @@
       }
     },
     {
-      "id": "7f8372b7-5440-4032-a336-2284d92d529a",
+      "id": "c316a183-b026-4aeb-abf3-e5a3d2584d85",
       "name": "Code: Build Report",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -445,11 +445,11 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const API_STORY_TYPE_ID  = 15;\nconst SHEET_URL = 'https://docs.google.com/spreadsheets/d/1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0';\n\n\nfunction linkId(links, key) {\n  const m = ((links?.[key]?.href) || '').match(/\\/(\\d+)$/);\n  return m ? parseInt(m[1]) : null;\n}\nfunction linkTitle(links, key, def='') { return (links?.[key]?.title) || def; }\n\n// getEls unwraps n8n v2.x HTTP response (body is in r.data as a JSON string)\nfunction getEls(nodeName) {\n  let r = $(nodeName).first().json;\n  if (r && r.data !== undefined) {\n    r = typeof r.data === 'string' ? JSON.parse(r.data) : r.data;\n  }\n  if (!r || !r._embedded) {\n    throw new Error(`${nodeName} — unexpected: ${JSON.stringify(r).slice(0,400)}`);\n  }\n  return r._embedded.elements || [];\n}\n\nconst merpOpenedEls  = getEls('HTTP: Merp Opened');\nconst merpOpenEndEls = getEls('HTTP: Merp Open End');\nconst bugsOpenedEls  = getEls('HTTP: Bugs Opened');\nconst bugsOpenEndEls = getEls('HTTP: Bugs Open End');\nconst devTasksEls    = getEls('HTTP: Dev Tasks');\nconst todoEls        = getEls('HTTP: Todo Tasks');\nconst tasksDetailEls = getEls('HTTP: Tasks Detail');\nconst bugsDetailEls  = getEls('HTTP: Bugs Detail');\n\nconst merpB       = merpOpenedEls.length;\nconst merpOpenEnd = merpOpenEndEls.length;\nconst merpBacklog = todoEls.length;\nconst merpWip     = merpOpenEnd - merpBacklog;\nconst bugsB       = bugsOpenedEls.length;\nconst bugsOpenEnd = bugsOpenEndEls.length;\nconst business    = merpOpenedEls.filter(w => linkId(w._links,'type') === API_STORY_TYPE_ID).length;\nconst internal    = merpB - business;\n\n// Dev tasks map (grouped by person, for the email table)\nconst devTasks = {}, seen = new Set();\nfor (const wp of devTasksEls) {\n  const links = wp._links || {};\n  const entry = { id: wp.id, subject: wp.subject||'', type: linkTitle(links,'type','Task') };\n  for (const person of [...new Set([linkTitle(links,'assignee',''), linkTitle(links,'responsible','')].filter(Boolean))]) {\n    const k = `${person}:${wp.id}`;\n    if (!seen.has(k)) {\n      (devTasks[person] = devTasks[person]||[]).push(entry);\n      seen.add(k);\n    }\n  }\n}\nfor (const p of Object.keys(devTasks)) devTasks[p].sort((a,b) => a.id - b.id);\n\n// Convert work package list to flat rows for Google Sheets\nfunction extractSheetRows(els, weekOf) {\n  return els.map(wp => {\n    const links = wp._links || {};\n    const fmt = s => s ? s.slice(0,16).replace('T',' ') : '';\n    return {\n      ID:          wp.id,\n      Subject:     wp.subject || '',\n      Type:        linkTitle(links, 'type', ''),\n      Status:      linkTitle(links, 'status', ''),\n      Author:      linkTitle(links, 'author', ''),\n      Assignee:    linkTitle(links, 'assignee', ''),\n      Accountable: linkTitle(links, 'responsible', ''),\n      'Updated on': fmt(wp.updatedAt),\n      'Created on': fmt(wp.createdAt),\n      'Week Of':   weekOf,\n    };\n  });\n}\n\n// Rolling 4-week cache — persisted to disk (weekly_data_cache.json) via the\n// Read/Write File nodes, NOT $getWorkflowStaticData (that resets whenever this\n// workflow is re-imported/redeployed, which is what caused missing weeks before).\n// The seed below is only a one-time bootstrap for a brand-new/empty cache file.\nlet cache;\ntry {\n  cache = JSON.parse($('Code: Parse Cache').first().json.cacheRaw || '{}');\n} catch (e) { cache = {}; }\nif (!cache || Object.keys(cache).length === 0) {\n  cache = {\n    \"2026-05-31_2026-06-06\": { merp_B:32,merp_C:15,merp_open:124,merp_wip:103,merp_backlog:21,bugs_B:13,bugs_C:18,bugs_open:16,biz_opened:17,int_opened:15,dev_tasks:{} },\n    \"2026-06-07_2026-06-13\": { merp_B:20,merp_C:21,merp_open:123,merp_wip:101,merp_backlog:22,bugs_B:9, bugs_C:13,bugs_open:12,biz_opened:10,int_opened:10,dev_tasks:{} },\n    \"2026-06-14_2026-06-20\": { merp_B:22,merp_C:38,merp_open:107,merp_wip:92, merp_backlog:15,bugs_B:7, bugs_C:5, bugs_open:14,biz_opened:13,int_opened:9, dev_tasks:{} },\n    \"2026-06-21_2026-06-27\": { merp_B:18,merp_C:18,merp_open:107,merp_wip:90, merp_backlog:17,bugs_B:7, bugs_C:9, bugs_open:12,biz_opened:10,int_opened:8, dev_tasks:{} }\n  };\n}\n\nconst setup = $('Code: Setup').first().json;\nconst ws = setup.weekStart, we = setup.weekEnd;\n\nfunction toISO(d) { return d.toISOString().slice(0,10); }\nfunction addDays(d,n) { const r=new Date(d); r.setDate(r.getDate()+n); return r; }\nfunction cacheKey(s,e) { return `${toISO(s)}_${toISO(e)}`; }\n\nconst currStart = new Date(ws+'T00:00:00'), currEnd = new Date(we+'T00:00:00');\nconst currKey   = cacheKey(currStart, currEnd);\n\ncache[currKey] = {\n  merp_B:merpB, merp_open:merpOpenEnd, merp_wip:merpWip, merp_backlog:merpBacklog,\n  bugs_B:bugsB, bugs_open:bugsOpenEnd, biz_opened:business, int_opened:internal, dev_tasks:devTasks\n};\n\nconst weeks = [3,2,1,0].map(i=>[addDays(currStart,-7*i),addDays(currEnd,-7*i)]);\nconst rows  = weeks.map(([s,e])=>({ start:s, end:e, ...(cache[cacheKey(s,e)]||{}) }));\n\nconst MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];\nconst ML=['January','February','March','April','May','June','July','August','September','October','November','December'];\nfunction sl(s,e) { return `${s.getDate()} ${MS[s.getMonth()]} - ${e.getDate()} ${MS[e.getMonth()]}`; }\nfunction wl(s,e) { return `${s.getDate()} ${ML[s.getMonth()]} - ${e.getDate()} ${ML[e.getMonth()]} ${e.getFullYear()}`; }\n\nfor (let i=0;i<rows.length;i++) {\n  const r=rows[i];\n  r.merp_open_corrected=r.merp_open||0; r.bugs_open_corrected=r.bugs_open||0;\n  if (i===0) { r.merp_A=(r.merp_open||0)-(r.merp_B||0)+(r.merp_C||0); r.bugs_A=(r.bugs_open||0)-(r.bugs_B||0)+(r.bugs_C||0); }\n  else        { r.merp_A=rows[i-1].merp_open||0; r.bugs_A=rows[i-1].bugs_open||0; }\n  if (i===3) {\n    r.merp_C=r.merp_A+(r.merp_B||0)-(r.merp_open||0);\n    r.bugs_C=r.bugs_A+(r.bugs_B||0)-(r.bugs_open||0);\n    cache[currKey].merp_C=r.merp_C;\n    cache[currKey].bugs_C=r.bugs_C;\n  }\n}\n\nconst cacheOut = JSON.stringify(cache, null, 2);\n\n// HTML generation\nconst H='#2E6B73',S='#5F9EA0';\nconst AB='#FFEB9C',AF='#9C6500',GB='#C6EFCE',GF='#375623',PB='#FFC7CE',PF='#9C0006';\nconst TH=`background:${H};color:white;padding:6px 10px;font-weight:bold`;\n\nfunction pct(cv,pv,gu=true) {\n  if(!pv) return '<td style=\"text-align:center;padding:5px 8px\">—</td>';\n  const d=cv-pv,p=Math.abs(d)/pv*100,ar=d>=0?'▲':'▼';\n  let bg,fg;\n  if(p<=5){bg=AB;fg=AF;}else if((d>0)===gu){bg=GB;fg=GF;}else{bg=PB;fg=PF;}\n  return `<td style=\"background:${bg};color:${fg};font-weight:bold;white-space:nowrap;text-align:center;padding:5px 8px\">${ar} ${p.toFixed(1)}%</td>`;\n}\nfunction num(n){return `<td style=\"text-align:right;padding:5px 10px\">${n}</td>`;}\n\nconst cur=rows[3],prv=rows[2],lbs=rows.map(r=>sl(r.start,r.end));\nconst cD=(cur.merp_C||0)-(prv.merp_C||0),cP=prv.merp_C?Math.abs(cD)/prv.merp_C*100:0;\nconst bD=(cur.bugs_open_corrected||0)-(prv.bugs_open_corrected||0),bP=prv.bugs_open_corrected?Math.abs(bD)/prv.bugs_open_corrected*100:0;\nconst hc=(d,p,g)=>p<=5?'#f39c12':(d>0)===g?'#27ae60':'#e74c3c';\n\nconst hl=`<ul>\n<li>The total number of <strong>closed tasks</strong> has <strong>${cD>=0?'increased':'decreased'}</strong> by\n    <span style=\"color:${hc(cD,cP,true)};font-weight:bold\">${cD>=0?'▲':'▼'} ${cP.toFixed(1)}%</span> vs last week.</li>\n<li>The total count of <strong>open bugs</strong> has <strong>${bD>=0?'increased':'decreased'}</strong> by\n    <span style=\"color:${hc(bD,bP,false)};font-weight:bold\">${bD>=0?'▲':'▼'} ${bP.toFixed(1)}%</span> vs last week.</li>\n</ul>`;\n\nconst th=lbs.map(l=>`<th style=\"${TH};text-align:center\">${l}</th>`).join('');\nconst hdr=`<tr><th style=\"${TH};text-align:left\">Report Summary</th>${th}<th style=\"${TH};text-align:center\">(+/- Last Week)</th></tr>`;\nconst sec=l=>`<tr><td colspan=\"6\" style=\"background:${S};color:white;font-weight:bold;padding:5px 10px\">${l}</td></tr>`;\nconst dr=(label,vals,pv,cv,gu=true)=>`<tr><td style=\"padding:5px 10px\">${label}</td>${vals.map(num).join('')}${pct(cv,pv,gu)}</tr>`;\n\nconst mr=[\n  sec('Merp SOA Tasks'),\n  dr('Open: Beginning of this week (A)',rows.map(r=>r.merp_A||0),prv.merp_A||0,cur.merp_A||0,false),\n  dr('Opened During this week (B)',rows.map(r=>r.merp_B||0),prv.merp_B||0,cur.merp_B||0,false),\n  dr('Closed During this week (C)',rows.map(r=>r.merp_C||0),prv.merp_C||0,cur.merp_C||0,true),\n  dr('Open: End of this week (A + B - C)',rows.map(r=>r.merp_open_corrected||0),prv.merp_open_corrected||0,cur.merp_open_corrected||0,false),\n  '<tr><td colspan=\"6\" style=\"padding:3px\"></td></tr>',\n  dr('Items in Under Development (WIP)',rows.map(r=>r.merp_wip||0),prv.merp_wip||0,cur.merp_wip||0,true),\n  dr('Backlog (Yet to align)',rows.map(r=>r.merp_backlog||0),prv.merp_backlog||0,cur.merp_backlog||0,false),\n].join('');\n\nconst br=[\n  sec('SOA Bugs - Open Project Tickets'),\n  dr('Open : Beginning of this week (A)',rows.map(r=>r.bugs_A||0),prv.bugs_A||0,cur.bugs_A||0,false),\n  dr('Opened During this week (B)',rows.map(r=>r.bugs_B||0),prv.bugs_B||0,cur.bugs_B||0,false),\n  dr('Closed During this week (C)',rows.map(r=>r.bugs_C||0),prv.bugs_C||0,cur.bugs_C||0,true),\n  dr('Open: End of this week (A + B - C)',rows.map(r=>r.bugs_open_corrected||0),prv.bugs_open_corrected||0,cur.bugs_open_corrected||0,false),\n].join('');\n\nconst sumT=`<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;font-size:13px;min-width:700px\">${hdr}${mr}<tr><td colspan=\"6\" style=\"padding:6px\"></td></tr>${br}</table>`;\nconst bifT=`<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;font-size:13px;min-width:700px;margin-top:20px\">${hdr}${sec('Merp SOA Tasks')}${dr('Total Opened Tickets during this week (A=B+C)',rows.map(r=>r.merp_B||0),prv.merp_B||0,cur.merp_B||0,true)}<tr><td colspan=\"6\" style=\"padding:3px\"></td></tr>${dr('Business Tickets (B)',rows.map(r=>r.biz_opened||0),prv.biz_opened||0,cur.biz_opened||0,true)}${dr('Internally Opened Tickets (C)',rows.map(r=>r.int_opened||0),prv.int_opened||0,cur.int_opened||0,true)}</table>`;\n\nlet devH='';\nfor (const [dev,tasks] of Object.entries(cur.dev_tasks||{}).sort()){\n  if(!tasks.length)continue;\n  let f=true;\n  for(const t of tasks){\n    const dc=f?`<td rowspan=\"${tasks.length}\" style=\"vertical-align:top;padding:5px 10px;font-weight:bold\">${dev}</td>`:'';\n    devH+=`<tr>${dc}<td style=\"padding:4px 10px\">${t.type} #${t.id}: ${t.subject}</td></tr>`;\n    f=false;\n  }\n}\nconst devT=`<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;font-size:13px;min-width:700px;margin-top:20px\"><tr><th style=\"${TH};text-align:left;width:160px\">Developer</th><th style=\"${TH};text-align:center\">${wl(cur.start,cur.end)}</th></tr><tr><td style=\"padding:5px 10px\"></td><th style=\"background:${S};color:white;padding:5px 10px;text-align:center\">Tasks</th></tr>${devH}</table>`;\n\nconst weekOf = sl(currStart, currEnd);\nconst period = `${weekOf} ${cur.end.getFullYear()}`;\nconst tasksRows = extractSheetRows(tasksDetailEls, weekOf);\nconst bugsRows  = extractSheetRows(bugsDetailEls,  weekOf);\n\n// Dynamic sheet tab names — include the week date range so each week is identifiable\nconst weekLabel      = `${currStart.getDate()}${MS[currStart.getMonth()]}-${currEnd.getDate()}${MS[currEnd.getMonth()]}`;\nconst sheetTabTasks  = `Tasks ${weekLabel}`;\nconst sheetTabBugs   = `Bugs ${weekLabel}`;\nconst sheetBodyTasks = JSON.stringify({requests:[{addSheet:{properties:{title:sheetTabTasks}}}]});\nconst sheetBodyBugs  = JSON.stringify({requests:[{addSheet:{properties:{title:sheetTabBugs}}}]});\n\nconst html=`<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head><body style=\"font-family:Arial,sans-serif;font-size:13px;color:#222;max-width:900px\"><p>Hi All,</p><p>Please find the Weekly Task Report of BI-SOA from <strong>${period}</strong>.</p><p><strong>Key Highlights :</strong></p>${hl}${sumT}<p style=\"margin-top:20px\">Please find below the bifurcation of total tickets opened :-</p>${bifT}${devT}<br><p>Please refer below for a detailed tracker.<br><a href=\"${SHEET_URL}\">BI-SOA Detailed Tracker</a></p><br><p><em>Thanks &amp; Regards,<br>BI SOA Automation<br>IndiaMart Intermesh Limited</em></p></body></html>`;\nconst subject=`BI Weekly Report :BI SOA Task Status Report : ${period}`;\n\nreturn [{ json: { html, subject, tasksRows, bugsRows, sheetTabTasks, sheetTabBugs, sheetBodyTasks, sheetBodyBugs, cacheOut } }];\n"
+        "jsCode": "const API_STORY_TYPE_ID  = 15;\nconst SHEET_URL = 'https://docs.google.com/spreadsheets/d/1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0';\n\n\nfunction linkId(links, key) {\n  const m = ((links?.[key]?.href) || '').match(/\\/(\\d+)$/);\n  return m ? parseInt(m[1]) : null;\n}\nfunction linkTitle(links, key, def='') { return (links?.[key]?.title) || def; }\n\n// getEls unwraps n8n v2.x HTTP response (body is in r.data as a JSON string)\nfunction getEls(nodeName) {\n  let r = $(nodeName).first().json;\n  if (r && r.data !== undefined) {\n    r = typeof r.data === 'string' ? JSON.parse(r.data) : r.data;\n  }\n  if (!r || !r._embedded) {\n    throw new Error(`${nodeName} — unexpected: ${JSON.stringify(r).slice(0,400)}`);\n  }\n  return r._embedded.elements || [];\n}\n\nconst merpOpenedEls  = getEls('HTTP: Merp Opened');\nconst merpOpenEndEls = getEls('HTTP: Merp Open End');\nconst bugsOpenedEls  = getEls('HTTP: Bugs Opened');\nconst bugsOpenEndEls = getEls('HTTP: Bugs Open End');\nconst devTasksEls    = getEls('HTTP: Dev Tasks');\nconst todoEls        = getEls('HTTP: Todo Tasks');\nconst tasksDetailEls = getEls('HTTP: Tasks Detail');\nconst bugsDetailEls  = getEls('HTTP: Bugs Detail');\n\nconst merpB       = merpOpenedEls.length;\nconst merpOpenEnd = merpOpenEndEls.length;\nconst merpBacklog = todoEls.length;\nconst merpWip     = merpOpenEnd - merpBacklog;\nconst bugsB       = bugsOpenedEls.length;\nconst bugsOpenEnd = bugsOpenEndEls.length;\nconst business    = merpOpenedEls.filter(w => linkId(w._links,'type') === API_STORY_TYPE_ID).length;\nconst internal    = merpB - business;\n\n// Dev tasks map (grouped by person, for the email table)\nconst devTasks = {}, seen = new Set();\nfor (const wp of devTasksEls) {\n  const links = wp._links || {};\n  const entry = { id: wp.id, subject: wp.subject||'', type: linkTitle(links,'type','Task') };\n  for (const person of [...new Set([linkTitle(links,'assignee',''), linkTitle(links,'responsible','')].filter(Boolean))]) {\n    const k = `${person}:${wp.id}`;\n    if (!seen.has(k)) {\n      (devTasks[person] = devTasks[person]||[]).push(entry);\n      seen.add(k);\n    }\n  }\n}\nfor (const p of Object.keys(devTasks)) devTasks[p].sort((a,b) => a.id - b.id);\n\n// Convert work package list to flat rows for Google Sheets\nfunction extractSheetRows(els, weekOf) {\n  return els.map(wp => {\n    const links = wp._links || {};\n    const fmt = s => s ? s.slice(0,16).replace('T',' ') : '';\n    return {\n      ID:          wp.id,\n      Subject:     wp.subject || '',\n      Type:        linkTitle(links, 'type', ''),\n      Status:      linkTitle(links, 'status', ''),\n      Author:      linkTitle(links, 'author', ''),\n      Assignee:    linkTitle(links, 'assignee', ''),\n      Accountable: linkTitle(links, 'responsible', ''),\n      'Updated on': fmt(wp.updatedAt),\n      'Created on': fmt(wp.createdAt),\n      'Week Of':   weekOf,\n    };\n  });\n}\n\n// Rolling 4-week cache — persisted to disk (weekly_data_cache.json) via the\n// Read/Write File nodes, NOT $getWorkflowStaticData (that resets whenever this\n// workflow is re-imported/redeployed, which is what caused missing weeks before).\n// The seed below is only a one-time bootstrap for a brand-new/empty cache file.\nlet cache;\ntry {\n  cache = JSON.parse($('Code: Parse Cache').first().json.cacheRaw || '{}');\n} catch (e) { cache = {}; }\nif (!cache || Object.keys(cache).length === 0) {\n  cache = {\n    \"2026-05-31_2026-06-06\": { merp_B:32,merp_C:15,merp_open:124,merp_wip:103,merp_backlog:21,bugs_B:13,bugs_C:18,bugs_open:16,biz_opened:17,int_opened:15,dev_tasks:{} },\n    \"2026-06-07_2026-06-13\": { merp_B:20,merp_C:21,merp_open:123,merp_wip:101,merp_backlog:22,bugs_B:9, bugs_C:13,bugs_open:12,biz_opened:10,int_opened:10,dev_tasks:{} },\n    \"2026-06-14_2026-06-20\": { merp_B:22,merp_C:38,merp_open:107,merp_wip:92, merp_backlog:15,bugs_B:7, bugs_C:5, bugs_open:14,biz_opened:13,int_opened:9, dev_tasks:{} },\n    \"2026-06-21_2026-06-27\": { merp_B:18,merp_C:18,merp_open:107,merp_wip:90, merp_backlog:17,bugs_B:7, bugs_C:9, bugs_open:12,biz_opened:10,int_opened:8, dev_tasks:{} }\n  };\n}\n\nconst setup = $('Code: Setup').first().json;\nconst ws = setup.weekStart, we = setup.weekEnd;\n\nfunction toISO(d) { return d.toISOString().slice(0,10); }\nfunction addDays(d,n) { const r=new Date(d); r.setDate(r.getDate()+n); return r; }\nfunction cacheKey(s,e) { return `${toISO(s)}_${toISO(e)}`; }\n\nconst currStart = new Date(ws+'T00:00:00'), currEnd = new Date(we+'T00:00:00');\nconst currKey   = cacheKey(currStart, currEnd);\n\ncache[currKey] = {\n  merp_B:merpB, merp_open:merpOpenEnd, merp_wip:merpWip, merp_backlog:merpBacklog,\n  bugs_B:bugsB, bugs_open:bugsOpenEnd, biz_opened:business, int_opened:internal, dev_tasks:devTasks\n};\n\nconst weeks = [3,2,1,0].map(i=>[addDays(currStart,-7*i),addDays(currEnd,-7*i)]);\nconst rows  = weeks.map(([s,e])=>({ start:s, end:e, ...(cache[cacheKey(s,e)]||{}) }));\n\nconst MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];\nconst ML=['January','February','March','April','May','June','July','August','September','October','November','December'];\nfunction sl(s,e) { return `${s.getDate()} ${MS[s.getMonth()]} - ${e.getDate()} ${MS[e.getMonth()]}`; }\nfunction wl(s,e) { return `${s.getDate()} ${ML[s.getMonth()]} - ${e.getDate()} ${ML[e.getMonth()]} ${e.getFullYear()}`; }\n\nfor (let i=0;i<rows.length;i++) {\n  const r=rows[i];\n  r.merp_open_corrected=r.merp_open||0; r.bugs_open_corrected=r.bugs_open||0;\n  if (i===0) { r.merp_A=(r.merp_open||0)-(r.merp_B||0)+(r.merp_C||0); r.bugs_A=(r.bugs_open||0)-(r.bugs_B||0)+(r.bugs_C||0); }\n  else        { r.merp_A=rows[i-1].merp_open||0; r.bugs_A=rows[i-1].bugs_open||0; }\n  if (i===3) {\n    r.merp_C=r.merp_A+(r.merp_B||0)-(r.merp_open||0);\n    r.bugs_C=r.bugs_A+(r.bugs_B||0)-(r.bugs_open||0);\n    cache[currKey].merp_C=r.merp_C;\n    cache[currKey].bugs_C=r.bugs_C;\n  }\n}\n\n// Prune cache to only the last 4 weeks (rows[0..3] keys) so it never grows unbounded.\nconst keepKeys = new Set(weeks.map(([s,e]) => cacheKey(s,e)));\nfor (const k of Object.keys(cache)) if (!keepKeys.has(k)) delete cache[k];\n\nconst cacheOut = JSON.stringify(cache, null, 2);\n\n// HTML generation\nconst H='#2E6B73',S='#5F9EA0';\nconst AB='#FFEB9C',AF='#9C6500',GB='#C6EFCE',GF='#375623',PB='#FFC7CE',PF='#9C0006';\nconst TH=`background:${H};color:white;padding:6px 10px;font-weight:bold`;\n\nfunction pct(cv,pv,gu=true) {\n  if(!pv) return '<td style=\"text-align:center;padding:5px 8px\">—</td>';\n  const d=cv-pv,p=Math.abs(d)/pv*100,ar=d>=0?'▲':'▼';\n  let bg,fg;\n  if(p<=5){bg=AB;fg=AF;}else if((d>0)===gu){bg=GB;fg=GF;}else{bg=PB;fg=PF;}\n  return `<td style=\"background:${bg};color:${fg};font-weight:bold;white-space:nowrap;text-align:center;padding:5px 8px\">${ar} ${p.toFixed(1)}%</td>`;\n}\nfunction num(n){return `<td style=\"text-align:right;padding:5px 10px\">${n}</td>`;}\n\nconst cur=rows[3],prv=rows[2],lbs=rows.map(r=>sl(r.start,r.end));\nconst cD=(cur.merp_C||0)-(prv.merp_C||0),cP=prv.merp_C?Math.abs(cD)/prv.merp_C*100:0;\nconst bD=(cur.bugs_open_corrected||0)-(prv.bugs_open_corrected||0),bP=prv.bugs_open_corrected?Math.abs(bD)/prv.bugs_open_corrected*100:0;\nconst hc=(d,p,g)=>p<=5?'#f39c12':(d>0)===g?'#27ae60':'#e74c3c';\n\nconst hl=`<ul>\n<li>The total number of <strong>closed tasks</strong> has <strong>${cD>=0?'increased':'decreased'}</strong> by\n    <span style=\"color:${hc(cD,cP,true)};font-weight:bold\">${cD>=0?'▲':'▼'} ${cP.toFixed(1)}%</span> vs last week.</li>\n<li>The total count of <strong>open bugs</strong> has <strong>${bD>=0?'increased':'decreased'}</strong> by\n    <span style=\"color:${hc(bD,bP,false)};font-weight:bold\">${bD>=0?'▲':'▼'} ${bP.toFixed(1)}%</span> vs last week.</li>\n</ul>`;\n\nconst th=lbs.map(l=>`<th style=\"${TH};text-align:center\">${l}</th>`).join('');\nconst hdr=`<tr><th style=\"${TH};text-align:left\">Report Summary</th>${th}<th style=\"${TH};text-align:center\">(+/- Last Week)</th></tr>`;\nconst sec=l=>`<tr><td colspan=\"6\" style=\"background:${S};color:white;font-weight:bold;padding:5px 10px\">${l}</td></tr>`;\nconst dr=(label,vals,pv,cv,gu=true)=>`<tr><td style=\"padding:5px 10px\">${label}</td>${vals.map(num).join('')}${pct(cv,pv,gu)}</tr>`;\n\nconst mr=[\n  sec('Merp SOA Tasks'),\n  dr('Open: Beginning of this week (A)',rows.map(r=>r.merp_A||0),prv.merp_A||0,cur.merp_A||0,false),\n  dr('Opened During this week (B)',rows.map(r=>r.merp_B||0),prv.merp_B||0,cur.merp_B||0,false),\n  dr('Closed During this week (C)',rows.map(r=>r.merp_C||0),prv.merp_C||0,cur.merp_C||0,true),\n  dr('Open: End of this week (A + B - C)',rows.map(r=>r.merp_open_corrected||0),prv.merp_open_corrected||0,cur.merp_open_corrected||0,false),\n  '<tr><td colspan=\"6\" style=\"padding:3px\"></td></tr>',\n  dr('Items in Under Development (WIP)',rows.map(r=>r.merp_wip||0),prv.merp_wip||0,cur.merp_wip||0,true),\n  dr('Backlog (Yet to align)',rows.map(r=>r.merp_backlog||0),prv.merp_backlog||0,cur.merp_backlog||0,false),\n].join('');\n\nconst br=[\n  sec('SOA Bugs - Open Project Tickets'),\n  dr('Open : Beginning of this week (A)',rows.map(r=>r.bugs_A||0),prv.bugs_A||0,cur.bugs_A||0,false),\n  dr('Opened During this week (B)',rows.map(r=>r.bugs_B||0),prv.bugs_B||0,cur.bugs_B||0,false),\n  dr('Closed During this week (C)',rows.map(r=>r.bugs_C||0),prv.bugs_C||0,cur.bugs_C||0,true),\n  dr('Open: End of this week (A + B - C)',rows.map(r=>r.bugs_open_corrected||0),prv.bugs_open_corrected||0,cur.bugs_open_corrected||0,false),\n].join('');\n\nconst sumT=`<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;font-size:13px;min-width:700px\">${hdr}${mr}<tr><td colspan=\"6\" style=\"padding:6px\"></td></tr>${br}</table>`;\nconst bifT=`<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;font-size:13px;min-width:700px;margin-top:20px\">${hdr}${sec('Merp SOA Tasks')}${dr('Total Opened Tickets during this week (A=B+C)',rows.map(r=>r.merp_B||0),prv.merp_B||0,cur.merp_B||0,true)}<tr><td colspan=\"6\" style=\"padding:3px\"></td></tr>${dr('Business Tickets (B)',rows.map(r=>r.biz_opened||0),prv.biz_opened||0,cur.biz_opened||0,true)}${dr('Internally Opened Tickets (C)',rows.map(r=>r.int_opened||0),prv.int_opened||0,cur.int_opened||0,true)}</table>`;\n\nlet devH='';\nfor (const [dev,tasks] of Object.entries(cur.dev_tasks||{}).sort()){\n  if(!tasks.length)continue;\n  let f=true;\n  for(const t of tasks){\n    const dc=f?`<td rowspan=\"${tasks.length}\" style=\"vertical-align:top;padding:5px 10px;font-weight:bold\">${dev}</td>`:'';\n    devH+=`<tr>${dc}<td style=\"padding:4px 10px\">${t.type} #${t.id}: ${t.subject}</td></tr>`;\n    f=false;\n  }\n}\nconst devT=`<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;font-size:13px;min-width:700px;margin-top:20px\"><tr><th style=\"${TH};text-align:left;width:160px\">Developer</th><th style=\"${TH};text-align:center\">${wl(cur.start,cur.end)}</th></tr><tr><td style=\"padding:5px 10px\"></td><th style=\"background:${S};color:white;padding:5px 10px;text-align:center\">Tasks</th></tr>${devH}</table>`;\n\nconst weekOf = sl(currStart, currEnd);\nconst period = `${weekOf} ${cur.end.getFullYear()}`;\nconst tasksRows = extractSheetRows(tasksDetailEls, weekOf);\nconst bugsRows  = extractSheetRows(bugsDetailEls,  weekOf);\n\n// Dynamic sheet tab names — include the week date range so each week is identifiable\nconst weekLabel      = `${currStart.getDate()}${MS[currStart.getMonth()]}-${currEnd.getDate()}${MS[currEnd.getMonth()]}`;\nconst sheetTabTasks  = `Tasks ${weekLabel}`;\nconst sheetTabBugs   = `Bugs ${weekLabel}`;\nconst sheetBodyTasks = JSON.stringify({requests:[{addSheet:{properties:{title:sheetTabTasks}}}]});\nconst sheetBodyBugs  = JSON.stringify({requests:[{addSheet:{properties:{title:sheetTabBugs}}}]});\n\nconst html=`<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head><body style=\"font-family:Arial,sans-serif;font-size:13px;color:#222;max-width:900px\"><p>Hi All,</p><p>Please find the Weekly Task Report of BI-SOA from <strong>${period}</strong>.</p><p><strong>Key Highlights :</strong></p>${hl}${sumT}<p style=\"margin-top:20px\">Please find below the bifurcation of total tickets opened :-</p>${bifT}${devT}<br><p>Please refer below for a detailed tracker.<br><a href=\"${SHEET_URL}\">BI-SOA Detailed Tracker</a></p><br><p><em>Thanks &amp; Regards,<br>BI SOA Automation<br>IndiaMart Intermesh Limited</em></p></body></html>`;\nconst subject=`BI Weekly Report :BI SOA Task Status Report : ${period}`;\n\nreturn [{ json: { html, subject, tasksRows, bugsRows, sheetTabTasks, sheetTabBugs, sheetBodyTasks, sheetBodyBugs, cacheOut } }];\n"
       }
     },
     {
-      "id": "296c6146-b771-49ee-a12a-64bc1386503b",
+      "id": "89870f1e-c001-4e59-af97-5a0ff146225d",
       "name": "Code: Prepare Cache File",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -463,7 +463,7 @@
       }
     },
     {
-      "id": "dc10aa8a-e5f9-4bf7-98ae-2d8b092524d1",
+      "id": "6dca07a8-184c-42bf-87e0-e51e16fb0853",
       "name": "Read/Write File: Save Cache",
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
@@ -480,7 +480,7 @@
       }
     },
     {
-      "id": "4b9e6b29-614f-4eef-9341-f12a48037620",
+      "id": "2a9d9c69-7e79-46a4-a8de-e87c42979102",
       "name": "HTTP: Create Tasks Tab",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -508,7 +508,7 @@
       }
     },
     {
-      "id": "6b1b9417-ee73-425c-8854-95e3d3cf8d0e",
+      "id": "b5b5cb32-95c3-4689-87e0-c0731b08a178",
       "name": "GSheets: Clear Tasks",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
@@ -538,7 +538,7 @@
       "continueOnFail": true
     },
     {
-      "id": "d1795f46-e413-47f1-93f5-4b53fe5495ad",
+      "id": "ed4d0a08-78e9-4a95-9e76-7a22d9fc966c",
       "name": "Code: To Task Rows",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -552,7 +552,7 @@
       }
     },
     {
-      "id": "127d63bd-34ca-413f-8b95-285bec5e3df7",
+      "id": "fec19b59-af01-4aea-9473-c9067eb49171",
       "name": "GSheets: Append Tasks",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
@@ -589,7 +589,7 @@
       "continueOnFail": true
     },
     {
-      "id": "b0ec506a-5532-423e-8d8e-9703b236e002",
+      "id": "b82087be-aee3-4711-b6f9-ec35ceb13dd5",
       "name": "HTTP: Create Bugs Tab",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -617,7 +617,7 @@
       }
     },
     {
-      "id": "cdc5363d-b3bb-4639-b611-73f8f72b62d7",
+      "id": "380cdb6b-2199-4153-991b-926ad1d9e1f5",
       "name": "GSheets: Clear Bugs",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
@@ -647,7 +647,7 @@
       "continueOnFail": true
     },
     {
-      "id": "d17a5263-0d5d-46a5-9458-6871fd45295f",
+      "id": "ef0112a8-f60c-4125-b3dd-979b63e37813",
       "name": "Code: To Bug Rows",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -661,7 +661,7 @@
       }
     },
     {
-      "id": "19ffded3-6794-407f-b373-d57106388808",
+      "id": "932861d8-5809-45b3-a66c-17a37ebd09bf",
       "name": "GSheets: Append Bugs",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
@@ -698,7 +698,7 @@
       "continueOnFail": true
     },
     {
-      "id": "50e6c4bb-fd0b-4ade-8f29-68f8aad31927",
+      "id": "6eb49a5f-cb9f-4aa5-a850-042e18b4c8b8",
       "name": "Code: Restore Email",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -712,7 +712,7 @@
       }
     },
     {
-      "id": "2b2d1f33-166e-4418-a4f8-f5ce41c70986",
+      "id": "c7f62986-03c9-4e43-b1db-4a07645cef7b",
       "name": "Send Email via Gmail",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,

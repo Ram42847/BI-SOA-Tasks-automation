@@ -199,6 +199,10 @@ for (let i=0;i<rows.length;i++) {
   }
 }
 
+// Prune cache to only the last 4 months (rows[0..3] keys) so it never grows unbounded.
+const keepKeys = new Set(rows.map(r => `${r.start.getFullYear()}-${String(r.start.getMonth()+1).padStart(2,'0')}`));
+for (const k of Object.keys(cache)) if (!keepKeys.has(k)) delete cache[k];
+
 const cacheOut = JSON.stringify(cache, null, 2);
 
 const MS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
