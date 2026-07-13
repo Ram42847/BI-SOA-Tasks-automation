@@ -14,17 +14,22 @@ seed, silently losing any week that had rolled past it — that's what caused th
 "21 Jun - 27 Jun" column to render as all zeros (and cascade into a wrong current
 week too).
 
-The cache now lives in `weekly_data_cache.json` on disk — the **same file**
-`report.py` already reads/writes — via two new `Read/Write Files from Disk`
-nodes (`Read/Write File: Load Cache` / `Read/Write File: Save Cache`). This
-survives workflow re-imports because the data no longer lives inside the
-workflow object at all.
+The cache now lives in a JSON file on **Google Drive** — read/written via two
+new Google Drive nodes (`Google Drive: Load Cache` / `Google Drive: Save
+Cache`, operations `download` / `update`). This survives workflow re-imports
+because the data no longer lives inside the workflow object at all, and it
+works regardless of how/where n8n is hosted (Docker, cloud, etc.) since it no
+longer depends on local disk access.
 
-**Setup requirement:** n8n must be able to read/write
-`/home/ramlal/mycode/open_project/soa-weekly-report/weekly_data_cache.json` on
-disk. If self-hosted n8n has `N8N_RESTRICT_FILE_ACCESS_TO` set, add this
-directory to that allow-list (n8n Cloud doesn't support disk access at all —
-this workflow requires self-hosted n8n on the same host as this repo).
+`report.py` is legacy/unused and still reads/writes its own local
+`weekly_data_cache.json` copy — it is **not** kept in sync with the Drive
+cache n8n now uses.
+
+**Setup requirement:** a Google Drive OAuth2 credential configured in n8n
+(assign it on both Google Drive nodes after import — the JSON ships with a
+placeholder credential ID), and the target file's Drive ID pasted into
+`WEEKLY_CACHE_DRIVE_FILE_ID` in `generate_n8n_workflow.py` before generating.
+See the comment above that constant for the one-time seed-upload steps.
 
 ---
 
@@ -37,7 +42,7 @@ this workflow requires self-hosted n8n on the same host as this repo).
                               │  (fans out — 8 HTTP calls + 1 cache-file read, all in parallel)
                     ┌─────────┴───────────────────────────────────────────────┐
                     ↓         ↓         ↓        ↓        ↓    ...   ↓        ↓
-              [2] HTTP:  [3] HTTP:  [4] HTTP: [5] HTTP: [6] HTTP: [7] HTTP: [8] HTTP: [9] HTTP:  [10] Read/Write File:
+              [2] HTTP:  [3] HTTP:  [4] HTTP: [5] HTTP: [6] HTTP: [7] HTTP: [8] HTTP: [9] HTTP:  [10] Google Drive:
               Merp       Merp       Bugs      Bugs      Dev       Todo      Tasks     Bugs            Load Cache
               Opened     Open End   Opened    Open End  Tasks     Tasks     Detail    Detail           │
                     │         │         │        │        │         │         │         │       [11] Code: Parse Cache
@@ -54,7 +59,7 @@ this workflow requires self-hosted n8n on the same host as this repo).
         [14] HTTP: Create   [18] HTTP: Create   [22] Code: Restore   [24] Code: Prepare
              Tasks Tab           Bugs Tab             Email                Cache File
                     │                   │                   │                   │
-        [15] GSheets:         [19] GSheets:       [23] Send Email    [25] Read/Write File:
+        [15] GSheets:         [19] GSheets:       [23] Send Email    [25] Google Drive:
              Clear Tasks           Clear Bugs           via Gmail          Save Cache
                     │                   │
         [16] Code:            [20] Code:
@@ -293,10 +298,11 @@ Reads all 8 HTTP node responses (via `$('HTTP: ...')` references) and computes a
 | `business` | HTTP: Merp Opened | count where type = Story (ID 15) | Business Tickets (B) |
 | `internal` | — | `merpB − business` | Internally Opened Tickets (C) |
 
-**Rolling 4-week cache** (persisted to `weekly_data_cache.json` on disk, read via `Code: Parse Cache` / written via `Code: Prepare Cache File` → `Read/Write File: Save Cache`):
+**Rolling 4-week cache** (persisted to a Google Drive file, read via `Google Drive: Load Cache` → `Code: Parse Cache` / written via `Code: Prepare Cache File` → `Google Drive: Save Cache`):
 - Key format: `"2026-06-22_2026-06-28"`
 - Saves current week; reads prior 3 weeks to build the 4-column table
 - Derives `merp_A` (open at week start) and calculates `merp_C` (closed = A + B − open_end)
+- Prunes any key outside the current 4-week window before writing back, so the cache never grows unbounded
 - If the cache file is empty/missing (brand-new deployment), falls back to a one-time hardcoded seed of 3 historical weeks
 
 **Developer table:** Groups HTTP: Dev Tasks results by Assignee + Accountable, deduplicates, sorts alphabetically.
@@ -478,8 +484,10 @@ Runs in parallel with Path A and Path B after Build Report. Does not wait for sh
 
 ## Cache Structure
 
-Stored in `weekly_data_cache.json` on disk (the same file `report.py` uses) —
-**not** in n8n's workflow static data, which resets on every re-import/redeploy.
+Stored as a JSON file on Google Drive — **not** on local disk, and **not** in
+n8n's workflow static data, which resets on every re-import/redeploy. The
+local `weekly_data_cache.json` in this repo is only a one-time seed you upload
+to Drive during setup; `report.py`'s local copy is a separate, unsynced file.
 
 ```json
 {
@@ -493,8 +501,8 @@ Stored in `weekly_data_cache.json` on disk (the same file `report.py` uses) —
 }
 ```
 
-Every run reads the file (`Read/Write File: Load Cache` → `Code: Parse Cache`),
-adds/overwrites the current week's key, and writes the whole thing back
-(`Code: Prepare Cache File` → `Read/Write File: Save Cache`). Old weeks are
-never deleted, so the file grows slowly over time — the report itself only
-ever displays the 4 most recent weeks.
+Every run reads the file (`Google Drive: Load Cache` → `Code: Parse Cache`),
+adds/overwrites the current week's key, prunes any key outside the current
+4-week window, and writes the result back (`Code: Prepare Cache File` →
+`Google Drive: Save Cache`). The file always holds exactly the 4 most recent
+weeks.

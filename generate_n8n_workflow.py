@@ -6,11 +6,16 @@ from pathlib import Path
 SHEET_ID  = '1xK11zA-7yEEOPFROe1uKLOTnsh9jDXch6owK6szd3-0'
 SHEET_URL = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}'
 
-# Persistent on-disk cache — same file report.py reads/writes, so history survives
-# workflow re-imports/redeploys (n8n's $getWorkflowStaticData resets on those).
-# Must be a path the n8n process itself can read/write. If n8n is self-hosted with
-# N8N_RESTRICT_FILE_ACCESS_TO set, add this directory to that allow-list.
-CACHE_FILE_PATH = '/home/ramlal/mycode/open_project/soa-weekly-report/weekly_data_cache.json'
+# Persistent cache — lives on Google Drive (not local disk), so it survives
+# workflow re-imports/redeploys (n8n's $getWorkflowStaticData resets on those)
+# and works regardless of where/how n8n is hosted (Docker, cloud, etc. — no
+# local filesystem access needed). report.py is legacy/unused; it is no longer
+# kept in sync with this cache.
+#
+# One-time setup: upload weekly_data_cache.json (in this directory) to Drive as
+# a seed, open it, copy the file ID out of the URL
+# (drive.google.com/file/d/<FILE_ID>/view), and paste it below.
+WEEKLY_CACHE_DRIVE_FILE_ID = 'YOUR_WEEKLY_CACHE_DRIVE_FILE_ID'
 
 # ── Code: Setup ───────────────────────────────────────────────────────────────
 JS_SETUP = r"""// Replace YOUR_OP_TOKEN_HERE with your actual OpenProject API token
@@ -79,21 +84,23 @@ return [{ json: {
 """
 
 # ── Code: Parse Cache ──────────────────────────────────────────────────────────
-# Reads the binary output of "Read/Write File: Load Cache" and decodes it to text.
+# Reads the binary output of "Google Drive: Load Cache" and decodes it to text.
 # If the file doesn't exist yet (first-ever run), the disk-read node fails but
 # continueOnFail lets the item through with no binary — we fall back to '{}'.
-JS_PARSE_CACHE = r"""const item = $input.first();
-let cacheRaw = '{}';
+JS_PARSE_CACHE = r"""let cacheRaw = '{}';
 try {
-  const b64 = item && item.binary && item.binary.data && item.binary.data.data;
-  if (b64) cacheRaw = Buffer.from(b64, 'base64').toString('utf-8');
+  const items = $input.all();
+  if (items.length && items[0].binary && items[0].binary.data) {
+    const buf = await this.helpers.getBinaryDataBuffer(0, 'data');
+    cacheRaw = buf.toString('utf-8');
+  }
 } catch (e) { /* leave cacheRaw as '{}' */ }
 return [{ json: { cacheRaw } }];
 """
 
 # ── Code: Prepare Cache File ───────────────────────────────────────────────────
 # Turns the updated cache JSON (produced by Code: Build Report) into binary data
-# so "Read/Write File: Save Cache" can write it to disk.
+# so "Google Drive: Save Cache" can write it to disk.
 JS_PREPARE_CACHE_FILE = r"""const d = $('Code: Build Report').first().json;
 const buffer = Buffer.from(d.cacheOut, 'utf-8');
 const binaryData = await this.helpers.prepareBinaryData(buffer, 'weekly_data_cache.json', 'application/json');
@@ -175,8 +182,8 @@ function extractSheetRows(els, weekOf) {
   });
 }
 
-// Rolling 4-week cache — persisted to disk (weekly_data_cache.json) via the
-// Read/Write File nodes, NOT $getWorkflowStaticData (that resets whenever this
+// Rolling 4-week cache — persisted to a Google Drive file via the Google
+// Drive nodes, NOT $getWorkflowStaticData (that resets whenever this
 // workflow is re-imported/redeployed, which is what caused missing weeks before).
 // The seed below is only a one-time bootstrap for a brand-new/empty cache file.
 let cache;
@@ -469,14 +476,17 @@ merge    = {"id":IDS['merge'],    "name":"Merge",
             "type":"n8n-nodes-base.merge", "typeVersion":3,
             "position":[1180, CENTER_Y],
             "parameters":{"mode":"append","numberInputs":9,"options":{}}}
-load_cache  = {"id":IDS['loadCache'], "name":"Read/Write File: Load Cache",
-            "type":"n8n-nodes-base.readWriteFile", "typeVersion":1,
+load_cache  = {"id":IDS['loadCache'], "name":"Google Drive: Load Cache",
+            "type":"n8n-nodes-base.googleDrive", "typeVersion":3,
             "continueOnFail": True,
             "position":[900, LOAD_CACHE_Y],
             "parameters":{
-                "operation": "read",
-                "fileSelector": CACHE_FILE_PATH,
-                "options": {"dataPropertyName": "data"}
+                "operation": "download",
+                "fileId": {"__rl": True, "value": WEEKLY_CACHE_DRIVE_FILE_ID, "mode": "id"},
+                "options": {"binaryPropertyName": "data"}
+            },
+            "credentials": {
+                "googleDriveOAuth2Api": {"id": "GOOGLE_DRIVE_CREDENTIAL_ID", "name": "Google Drive account"}
             }}
 parse_cache = {"id":IDS['parseCache'], "name":"Code: Parse Cache",
             "type":"n8n-nodes-base.code", "typeVersion":2,
@@ -486,15 +496,19 @@ prep_cache  = {"id":IDS['prepCache'], "name":"Code: Prepare Cache File",
             "type":"n8n-nodes-base.code", "typeVersion":2,
             "position":[1740, LOAD_CACHE_Y],
             "parameters":{"mode":"runOnceForAllItems","jsCode":JS_PREPARE_CACHE_FILE}}
-save_cache  = {"id":IDS['saveCache'], "name":"Read/Write File: Save Cache",
-            "type":"n8n-nodes-base.readWriteFile", "typeVersion":1,
+save_cache  = {"id":IDS['saveCache'], "name":"Google Drive: Save Cache",
+            "type":"n8n-nodes-base.googleDrive", "typeVersion":3,
             "continueOnFail": True,
             "position":[2020, LOAD_CACHE_Y],
             "parameters":{
-                "operation": "write",
-                "fileName": CACHE_FILE_PATH,
-                "dataPropertyName": "data",
+                "operation": "update",
+                "fileId": {"__rl": True, "value": WEEKLY_CACHE_DRIVE_FILE_ID, "mode": "id"},
+                "changeFileContent": True,
+                "inputDataFieldName": "data",
                 "options": {}
+            },
+            "credentials": {
+                "googleDriveOAuth2Api": {"id": "GOOGLE_DRIVE_CREDENTIAL_ID", "name": "Google Drive account"}
             }}
 build    = {"id":IDS['build'],    "name":"Code: Build Report",
             "type":"n8n-nodes-base.code", "typeVersion":2,
@@ -561,9 +575,9 @@ conns = {
     # Setup → all 8 HTTP nodes + the cache-file read, in parallel (9 targets)
     "Code: Setup": {"main": [[
         *({"node": n["name"], "type": "main", "index": 0} for n in http_nodes),
-        {"node": "Read/Write File: Load Cache", "type": "main", "index": 0},
+        {"node": "Google Drive: Load Cache", "type": "main", "index": 0},
     ]]},
-    "Read/Write File: Load Cache": {"main": [[{"node":"Code: Parse Cache","type":"main","index":0}]]},
+    "Google Drive: Load Cache": {"main": [[{"node":"Code: Parse Cache","type":"main","index":0}]]},
     "Code: Parse Cache": {"main": [[{"node":"Merge","type":"main","index":8}]]},
     # Build Report → 3 existing parallel paths + persist the updated cache to disk
     "Code: Build Report": {"main": [[
@@ -572,7 +586,7 @@ conns = {
         {"node": "Code: Restore Email",    "type": "main", "index": 0},
         {"node": "Code: Prepare Cache File", "type": "main", "index": 0},
     ]]},
-    "Code: Prepare Cache File": {"main": [[{"node":"Read/Write File: Save Cache","type":"main","index":0}]]},
+    "Code: Prepare Cache File": {"main": [[{"node":"Google Drive: Save Cache","type":"main","index":0}]]},
     # Tasks path
     "HTTP: Create Tasks Tab": {"main": [[{"node":"GSheets: Clear Tasks", "type":"main","index":0}]]},
     "GSheets: Clear Tasks":   {"main": [[{"node":"Code: To Task Rows",   "type":"main","index":0}]]},
