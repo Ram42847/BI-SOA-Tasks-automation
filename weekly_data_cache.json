@@ -1,30 +1,4 @@
 {
-  "2026-05-31_2026-06-06": {
-    "merp_B": 32,
-    "merp_C": 15,
-    "merp_open": 124,
-    "merp_wip": 103,
-    "merp_backlog": 21,
-    "bugs_B": 13,
-    "bugs_C": 18,
-    "bugs_open": 16,
-    "biz_opened": 17,
-    "int_opened": 15,
-    "dev_tasks": {}
-  },
-  "2026-06-07_2026-06-13": {
-    "merp_B": 20,
-    "merp_C": 21,
-    "merp_open": 123,
-    "merp_wip": 101,
-    "merp_backlog": 22,
-    "bugs_B": 9,
-    "bugs_C": 13,
-    "bugs_open": 12,
-    "biz_opened": 10,
-    "int_opened": 10,
-    "dev_tasks": {}
-  },
   "2026-06-14_2026-06-20": {
     "merp_B": 22,
     "merp_C": 38,
@@ -135,7 +109,7 @@
         },
         {
           "id": 669493,
-          "subject": "[Imp]: Internal Email Communication Optimization \u2013 Cost Reduction (CSD/KCD/Tele Annual verticals)",
+          "subject": "[Imp]: Internal Email Communication Optimization – Cost Reduction (CSD/KCD/Tele Annual verticals)",
           "type": "API Story"
         },
         {
@@ -145,7 +119,7 @@
         },
         {
           "id": 671627,
-          "subject": "Enabling 0\u2013120 Upsell Filter & Case-Level Visibility in MERP",
+          "subject": "Enabling 0–120 Upsell Filter & Case-Level Visibility in MERP",
           "type": "API Story"
         },
         {
@@ -262,7 +236,7 @@
         },
         {
           "id": 671627,
-          "subject": "Enabling 0\u2013120 Upsell Filter & Case-Level Visibility in MERP",
+          "subject": "Enabling 0–120 Upsell Filter & Case-Level Visibility in MERP",
           "type": "API Story"
         },
         {
@@ -319,7 +293,7 @@
       "Hrishabh Awadhiya": [
         {
           "id": 668017,
-          "subject": "Request for IP Whitelisting \u2013 Company Search API (MERP Intermesh)",
+          "subject": "Request for IP Whitelisting – Company Search API (MERP Intermesh)",
           "type": "API Story"
         },
         {
@@ -356,7 +330,7 @@
       "Kushagra Sharma": [
         {
           "id": 668017,
-          "subject": "Request for IP Whitelisting \u2013 Company Search API (MERP Intermesh)",
+          "subject": "Request for IP Whitelisting – Company Search API (MERP Intermesh)",
           "type": "API Story"
         },
         {
@@ -543,7 +517,7 @@
       "Ramu Lath": [
         {
           "id": 670363,
-          "subject": "Airtel double-leg C2C \u2014 customC2cCall API vendor branching + new post-call endpoint",
+          "subject": "Airtel double-leg C2C — customC2cCall API vendor branching + new post-call endpoint",
           "type": "API Story"
         }
       ],
@@ -685,7 +659,7 @@
         },
         {
           "id": 669493,
-          "subject": "[Imp]: Internal Email Communication Optimization \u2013 Cost Reduction (CSD/KCD/Tele Annual verticals)",
+          "subject": "[Imp]: Internal Email Communication Optimization – Cost Reduction (CSD/KCD/Tele Annual verticals)",
           "type": "API Story"
         },
         {
@@ -712,12 +686,540 @@
       "devansh khandelwal": [
         {
           "id": 670363,
-          "subject": "Airtel double-leg C2C \u2014 customC2cCall API vendor branching + new post-call endpoint",
+          "subject": "Airtel double-leg C2C — customC2cCall API vendor branching + new post-call endpoint",
           "type": "API Story"
         }
       ]
     },
     "merp_C": 18,
     "bugs_C": 9
+  },
+  "2026-06-28_2026-07-04": {
+    "merp_B": 38,
+    "merp_C": 25,
+    "merp_open": 120,
+    "merp_wip": 93,
+    "merp_backlog": 27,
+    "bugs_B": 10,
+    "bugs_C": 10,
+    "bugs_open": 12,
+    "biz_opened": 18,
+    "int_opened": 20,
+    "dev_tasks": {}
+  },
+  "2026-07-05_2026-07-11": {
+    "merp_B": 24,
+    "merp_open": 127,
+    "merp_wip": 98,
+    "merp_backlog": 29,
+    "bugs_B": 12,
+    "bugs_open": 17,
+    "biz_opened": 8,
+    "int_opened": 16,
+    "merp_C": 17,
+    "bugs_C": 7,
+    "dev_tasks": {
+      "Kushagra Sharma": [
+        {
+          "id": 657464,
+          "subject": "Diverting calls on unassigned DIDs to 9696",
+          "type": "API Story"
+        },
+        {
+          "id": 674101,
+          "subject": "[Bi-Support] Call Tagging Issue",
+          "type": "API Bug"
+        }
+      ],
+      "Hrishabh Awadhiya": [
+        {
+          "id": 657464,
+          "subject": "Diverting calls on unassigned DIDs to 9696",
+          "type": "API Story"
+        },
+        {
+          "id": 658745,
+          "subject": "New Vendor (airtel) addition for C2C",
+          "type": "API Story"
+        },
+        {
+          "id": 671595,
+          "subject": "Enable Full Ticket History Retrieval for LAST_TICKETS_CLM_FEEDBACK in KYC Details API",
+          "type": "API Story"
+        },
+        {
+          "id": 674101,
+          "subject": "[Bi-Support] Call Tagging Issue",
+          "type": "API Bug"
+        },
+        {
+          "id": 674304,
+          "subject": "Revision in TP for Photo Product Addition and Supplier Competition Activities",
+          "type": "API Story"
+        },
+        {
+          "id": 675211,
+          "subject": "Pre Call Api changes for unassigned DIDs",
+          "type": "API Story"
+        },
+        {
+          "id": 675267,
+          "subject": "Visibility of internal ticket on STS cust voice",
+          "type": "API Story"
+        },
+        {
+          "id": 676403,
+          "subject": "Changes in getServiceDetails API to Provide Sales and Tele Assignee Name",
+          "type": "API Story"
+        },
+        {
+          "id": 676607,
+          "subject": "Include Complainant Details in View Ticket API for BS Conflict Tickets",
+          "type": "API Story"
+        },
+        {
+          "id": 676844,
+          "subject": "Urgent: Not Receiving Calls Since 4 July from Call Feedback 3 Queue",
+          "type": "API Bug"
+        }
+      ],
+      "devansh khandelwal": [
+        {
+          "id": 658745,
+          "subject": "New Vendor (airtel) addition for C2C",
+          "type": "API Story"
+        },
+        {
+          "id": 670363,
+          "subject": "Airtel double-leg C2C — customC2cCall API vendor branching + new post-call endpoint",
+          "type": "API Story"
+        },
+        {
+          "id": 674731,
+          "subject": "EmployeeId not captured for CC transferred calls",
+          "type": "API Bug"
+        },
+        {
+          "id": 675258,
+          "subject": "Change in DID for Diverted calls",
+          "type": "API Story"
+        },
+        {
+          "id": 676739,
+          "subject": "Access log correction for /go/api/v1/c2c/inhouse",
+          "type": "Task"
+        }
+      ],
+      "Shikha Pal": [
+        {
+          "id": 659431,
+          "subject": "PHP to GO Migration : /index.php/userlist/companydetail",
+          "type": "Task"
+        },
+        {
+          "id": 673712,
+          "subject": "Enhancement in E-NACH Account Change API",
+          "type": "Task"
+        }
+      ],
+      "Arjun Sharma": [
+        {
+          "id": 663504,
+          "subject": "PHP to GO Migration : /index.php/erp/OpportunityRemainderMailer/sendOpportunityEmails",
+          "type": "API Optimization"
+        },
+        {
+          "id": 674315,
+          "subject": "Usage of imdocs & Changes in the APIs",
+          "type": "Task"
+        },
+        {
+          "id": 674746,
+          "subject": "Multiple packet's of the same information produced in kafka topic",
+          "type": "API Bug"
+        }
+      ],
+      "Garg Priya": [
+        {
+          "id": 663504,
+          "subject": "PHP to GO Migration : /index.php/erp/OpportunityRemainderMailer/sendOpportunityEmails",
+          "type": "API Optimization"
+        },
+        {
+          "id": 668911,
+          "subject": "Stopping internal emails to reduce email volume (CSD/KCD/Tele Annual verticals)",
+          "type": "API Story"
+        },
+        {
+          "id": 669164,
+          "subject": "Display Call Answer Metrics on Seller Contact Numbers on CSD MERP",
+          "type": "API Story"
+        },
+        {
+          "id": 671857,
+          "subject": "DWH APIs Migration to MERP",
+          "type": "Task"
+        },
+        {
+          "id": 671861,
+          "subject": "DWH APIs to Merp domain",
+          "type": "Task"
+        },
+        {
+          "id": 673794,
+          "subject": "Latlong capture from CSD MERP during 'Company Search' and 'Global Search'",
+          "type": "API Story"
+        },
+        {
+          "id": 673842,
+          "subject": "Incorrect Service Sale Issue for Nach Update Case",
+          "type": "API Bug"
+        },
+        {
+          "id": 674315,
+          "subject": "Usage of imdocs & Changes in the APIs",
+          "type": "Task"
+        },
+        {
+          "id": 674493,
+          "subject": "Update Star and Leader BL Allocation Configuration",
+          "type": "Task"
+        },
+        {
+          "id": 674746,
+          "subject": "Multiple packet's of the same information produced in kafka topic",
+          "type": "API Bug"
+        },
+        {
+          "id": 674967,
+          "subject": "CQS API Not sending anydata",
+          "type": "API Bug"
+        },
+        {
+          "id": 676721,
+          "subject": "Enable Repeated AK Usage for Mcat City Listing API (Windmill POC)",
+          "type": "Task"
+        }
+      ],
+      "Ramlal Suthar": [
+        {
+          "id": 665579,
+          "subject": "dwh-cluster-k8 API gateway resgistration ",
+          "type": "Task"
+        },
+        {
+          "id": 666617,
+          "subject": "Migration of DWH APIS from dwh to merp domain ",
+          "type": "Task"
+        },
+        {
+          "id": 673712,
+          "subject": "Enhancement in E-NACH Account Change API",
+          "type": "Task"
+        },
+        {
+          "id": 675170,
+          "subject": "proposalconfirmationnew s3 relatad chagnes testing glids flow to be removed ",
+          "type": "Task"
+        }
+      ],
+      "Vedant Kothawade": [
+        {
+          "id": 667405,
+          "subject": "Remove Meeting with employee if 546+D ",
+          "type": "API Story"
+        },
+        {
+          "id": 667621,
+          "subject": "Keys for hotlead removal after 14 day in companylisting API",
+          "type": "API Story"
+        },
+        {
+          "id": 670372,
+          "subject": "Movement of DWH API endpoint",
+          "type": "API Optimization"
+        },
+        {
+          "id": 676036,
+          "subject": "Start providing API response when employee token is provided for PrePlus API",
+          "type": "API Story"
+        },
+        {
+          "id": 676600,
+          "subject": "Requirement: Company List API change to control HL visible for executives on MERP APP",
+          "type": "API Story"
+        }
+      ],
+      "Rachita Mathur": [
+        {
+          "id": 667405,
+          "subject": "Remove Meeting with employee if 546+D ",
+          "type": "API Story"
+        },
+        {
+          "id": 667621,
+          "subject": "Keys for hotlead removal after 14 day in companylisting API",
+          "type": "API Story"
+        },
+        {
+          "id": 670372,
+          "subject": "Movement of DWH API endpoint",
+          "type": "API Optimization"
+        },
+        {
+          "id": 673049,
+          "subject": "Enable Instant Activation API for Winback",
+          "type": "API Story"
+        },
+        {
+          "id": 674541,
+          "subject": "PHP to GO Migration : actionnsdmeetingupdate ",
+          "type": "API Optimization"
+        },
+        {
+          "id": 675452,
+          "subject": "MERP Employee Details API returns data for inactive/ex-employees",
+          "type": "API Bug"
+        },
+        {
+          "id": 676370,
+          "subject": "Wrong Saleschecklist Message Recived from SalesChecklistV2 api",
+          "type": "API Bug"
+        },
+        {
+          "id": 676600,
+          "subject": "Requirement: Company List API change to control HL visible for executives on MERP APP",
+          "type": "API Story"
+        },
+        {
+          "id": 676748,
+          "subject": "Re: PHP to Golang Migration -/index.php/Queuehistory/Createhistory Observations",
+          "type": "API Bug"
+        },
+        {
+          "id": 676806,
+          "subject": "Whitelisting of API for weberp Proposal sales_checklist",
+          "type": "API Story"
+        },
+        {
+          "id": 676820,
+          "subject": "Data Moveout Logic for NSD FSF",
+          "type": "API Story"
+        },
+        {
+          "id": 677183,
+          "subject": "PHP TO GO Migration index.php/Nach/postsalesnachdetailsV1 Observations",
+          "type": "API Bug"
+        }
+      ],
+      "Mohit Saini3": [
+        {
+          "id": 668911,
+          "subject": "Stopping internal emails to reduce email volume (CSD/KCD/Tele Annual verticals)",
+          "type": "API Story"
+        },
+        {
+          "id": 673794,
+          "subject": "Latlong capture from CSD MERP during 'Company Search' and 'Global Search'",
+          "type": "API Story"
+        },
+        {
+          "id": 673842,
+          "subject": "Incorrect Service Sale Issue for Nach Update Case",
+          "type": "API Bug"
+        },
+        {
+          "id": 674493,
+          "subject": "Update Star and Leader BL Allocation Configuration",
+          "type": "Task"
+        },
+        {
+          "id": 674967,
+          "subject": "CQS API Not sending anydata",
+          "type": "API Bug"
+        },
+        {
+          "id": 675279,
+          "subject": "S3 Changes in the two APIs",
+          "type": "Task"
+        }
+      ],
+      "Aman Kumar": [
+        {
+          "id": 669164,
+          "subject": "Display Call Answer Metrics on Seller Contact Numbers on CSD MERP",
+          "type": "API Story"
+        },
+        {
+          "id": 671861,
+          "subject": "DWH APIs to Merp domain",
+          "type": "Task"
+        },
+        {
+          "id": 675279,
+          "subject": "S3 Changes in the two APIs",
+          "type": "Task"
+        },
+        {
+          "id": 676721,
+          "subject": "Enable Repeated AK Usage for Mcat City Listing API (Windmill POC)",
+          "type": "Task"
+        }
+      ],
+      "Ramu Lath": [
+        {
+          "id": 670363,
+          "subject": "Airtel double-leg C2C — customC2cCall API vendor branching + new post-call endpoint",
+          "type": "API Story"
+        },
+        {
+          "id": 674731,
+          "subject": "EmployeeId not captured for CC transferred calls",
+          "type": "API Bug"
+        },
+        {
+          "id": 675258,
+          "subject": "Change in DID for Diverted calls",
+          "type": "API Story"
+        },
+        {
+          "id": 676739,
+          "subject": "Access log correction for /go/api/v1/c2c/inhouse",
+          "type": "Task"
+        }
+      ],
+      "Prashant Kumar Saxena": [
+        {
+          "id": 670832,
+          "subject": "Identify Correct Logic for Approved Score (TP) on DSR and TP Bifurcation",
+          "type": "R & D"
+        },
+        {
+          "id": 671595,
+          "subject": "Enable Full Ticket History Retrieval for LAST_TICKETS_CLM_FEEDBACK in KYC Details API",
+          "type": "API Story"
+        },
+        {
+          "id": 674304,
+          "subject": "Revision in TP for Photo Product Addition and Supplier Competition Activities",
+          "type": "API Story"
+        },
+        {
+          "id": 675211,
+          "subject": "Pre Call Api changes for unassigned DIDs",
+          "type": "API Story"
+        },
+        {
+          "id": 675267,
+          "subject": "Visibility of internal ticket on STS cust voice",
+          "type": "API Story"
+        },
+        {
+          "id": 676403,
+          "subject": "Changes in getServiceDetails API to Provide Sales and Tele Assignee Name",
+          "type": "API Story"
+        },
+        {
+          "id": 676607,
+          "subject": "Include Complainant Details in View Ticket API for BS Conflict Tickets",
+          "type": "API Story"
+        },
+        {
+          "id": 676844,
+          "subject": "Urgent: Not Receiving Calls Since 4 July from Call Feedback 3 Queue",
+          "type": "API Bug"
+        }
+      ],
+      "Vipul Bansal": [
+        {
+          "id": 671857,
+          "subject": "DWH APIs Migration to MERP",
+          "type": "Task"
+        },
+        {
+          "id": 677373,
+          "subject": "Logic of Categories in CompanyOverviewDetail API",
+          "type": "Task"
+        },
+        {
+          "id": 677495,
+          "subject": "On reminder screen displaying 12 AM reminders.",
+          "type": "API Bug"
+        }
+      ],
+      "Shivam 03": [
+        {
+          "id": 673049,
+          "subject": "Enable Instant Activation API for Winback",
+          "type": "API Story"
+        },
+        {
+          "id": 675452,
+          "subject": "MERP Employee Details API returns data for inactive/ex-employees",
+          "type": "API Bug"
+        },
+        {
+          "id": 676381,
+          "subject": "PHP to GO Migration : /index.php/Queuehistory/Createhistory",
+          "type": "API Optimization"
+        },
+        {
+          "id": 676398,
+          "subject": "Restrict Login for older version of APP",
+          "type": "Task"
+        },
+        {
+          "id": 676748,
+          "subject": "Re: PHP to Golang Migration -/index.php/Queuehistory/Createhistory Observations",
+          "type": "API Bug"
+        },
+        {
+          "id": 676806,
+          "subject": "Whitelisting of API for weberp Proposal sales_checklist",
+          "type": "API Story"
+        }
+      ],
+      "Pushkal Pandey": [
+        {
+          "id": 674541,
+          "subject": "PHP to GO Migration : actionnsdmeetingupdate ",
+          "type": "API Optimization"
+        },
+        {
+          "id": 676370,
+          "subject": "Wrong Saleschecklist Message Recived from SalesChecklistV2 api",
+          "type": "API Bug"
+        },
+        {
+          "id": 676820,
+          "subject": "Data Moveout Logic for NSD FSF",
+          "type": "API Story"
+        }
+      ],
+      "Himanshi Gupta01": [
+        {
+          "id": 675217,
+          "subject": "PHP TO GO Migration index.php/Nach/postsalesnachdetailsV1",
+          "type": "API Optimization"
+        },
+        {
+          "id": 676536,
+          "subject": "PHP TO GO Migration index.php/User/BuyLeadData",
+          "type": "API Optimization"
+        },
+        {
+          "id": 677183,
+          "subject": "PHP TO GO Migration index.php/Nach/postsalesnachdetailsV1 Observations",
+          "type": "API Bug"
+        }
+      ],
+      "Venkatesh Vishwas": [
+        {
+          "id": 676512,
+          "subject": "Discrepancy in data from API - MDC 1-",
+          "type": "API Bug"
+        }
+      ]
+    }
   }
 }
